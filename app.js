@@ -268,10 +268,209 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Sidebar Toggle Event Listeners
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const toggleBtn = document.getElementById('menu-toggle-btn');
+    const closeBtn = document.getElementById('close-sidebar-btn');
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
+
+    // Check registration state
+    const regOverlay = document.getElementById('register-fullscreen-overlay');
+    const registeredUser = localStorage.getItem('registeredUser');
+
+    if (!registeredUser) {
+        regOverlay.style.display = 'flex';
+    } else {
+        regOverlay.style.display = 'none';
+        const user = JSON.parse(registeredUser);
+        updateUserUI(user);
+        if (user.customAvatar) {
+            updateFormChoices(user.customAvatar);
+        }
+    }
+
+    // Handle Forced Registration Form
+    const firstRegForm = document.getElementById('first-register-form');
+    if (firstRegForm) {
+        firstRegForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('first-reg-nome').value.trim();
+            const email = document.getElementById('first-reg-email').value.trim();
+            const senha = document.getElementById('first-reg-senha').value;
+
+            // Password validation
+            const hasMinLength = senha.length >= 8;
+            const hasUpper = /[A-Z]/.test(senha);
+            const hasLower = /[a-z]/.test(senha);
+            const hasNumber = /[0-9]/.test(senha);
+
+            if (!hasMinLength || !hasUpper || !hasLower || !hasNumber) {
+                showToast('Senha inválida! Mínimo de 8 caracteres, contendo maiúsculas, minúsculas e número.', 'error');
+                return;
+            }
+
+            const newUser = {
+                name: nome,
+                email: email,
+                role: 'Administrador(a)',
+                avatarType: 'custom',
+                customAvatar: {
+                    bgColor: '#2c3e50',
+                    hair: 'ondulado',
+                    eyes: 'classico',
+                    mouth: 'amigavel'
+                }
+            };
+
+            localStorage.setItem('registeredUser', JSON.stringify(newUser));
+            updateUserUI(newUser);
+            
+            // Hide registration screen with animation
+            regOverlay.style.transition = 'opacity 0.5s ease-out';
+            regOverlay.style.opacity = '0';
+            setTimeout(() => {
+                regOverlay.style.display = 'none';
+            }, 500);
+
+            showToast('Cadastro realizado com sucesso!', 'success');
+
+            // Redirect to Perfil
+            setTimeout(() => {
+                switchTab('perfil');
+            }, 600);
+        });
+    }
+
+    // Set up live preview change events for avatar editor
+    const customizationForm = document.getElementById('avatar-customize-form');
+    if (customizationForm) {
+        customizationForm.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                updateLivePreview();
+            });
+        });
+
+        // Handle avatar customizer form submission
+        customizationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const registeredUser = localStorage.getItem('registeredUser');
+            if (registeredUser) {
+                const user = JSON.parse(registeredUser);
+                user.avatarType = 'custom';
+                user.customAvatar = getFormAvatarData();
+                localStorage.setItem('registeredUser', JSON.stringify(user));
+                updateUserUI(user);
+                
+                showToast('Avatar personalizado salvo!', 'success');
+            }
+        });
+    }
+
+    // File upload logic
+    const fileInput = document.getElementById('avatar-file-input');
+    const uploadArea = document.getElementById('avatar-upload-area');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleAvatarFile(file);
+            }
+        });
+    }
+
+    if (uploadArea) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            }, false);
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleAvatarFile(file);
+            }
+        });
+    }
+
+    function handleAvatarFile(file) {
+        if (file.size > 1024 * 1024) {
+            showToast('Arquivo muito grande! O limite é de 1MB.', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const base64Data = event.target.result;
+            const registeredUser = localStorage.getItem('registeredUser');
+            if (registeredUser) {
+                const user = JSON.parse(registeredUser);
+                user.avatarType = 'uploaded';
+                user.avatarData = base64Data;
+                localStorage.setItem('registeredUser', JSON.stringify(user));
+                
+                updateUserUI(user);
+                showToast('Foto da galeria carregada com sucesso!', 'success');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Reset avatar button
+    const btnResetAvatar = document.getElementById('btn-reset-avatar');
+    if (btnResetAvatar) {
+        btnResetAvatar.addEventListener('click', () => {
+            const registeredUser = localStorage.getItem('registeredUser');
+            if (registeredUser) {
+                const user = JSON.parse(registeredUser);
+                user.avatarType = 'custom';
+                user.avatarData = '';
+                localStorage.setItem('registeredUser', JSON.stringify(user));
+                
+                updateUserUI(user);
+                updateFormChoices(user.customAvatar);
+                showToast('Foto personalizada removida. Avatar restaurado.', 'success');
+            }
+        });
+    }
+
     // Populate Initial Renders
     renderLessonPlans();
     renderNotifications();
     updateDashboardStats();
+    renderRegisteredBoletins();
+    setupNextBoletimCode();
 
     // Auto-calculate difference in Boletim Form
     const inputPrevista = document.getElementById('boletim-qtd-prevista');
@@ -288,7 +487,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Wire up forms
     document.getElementById('boletim-form').addEventListener('submit', handleBoletimSubmit);
-    document.getElementById('cadastro-form').addEventListener('submit', handleCadastroSubmit);
     document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
     document.getElementById('form-add-plano').addEventListener('submit', handleAddPlanoSubmit);
     document.getElementById('form-transfer-product').addEventListener('submit', handleTransferSubmit);
@@ -297,6 +495,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('boletim-data').value = today;
     document.getElementById('plano-data-input').value = today;
+
+    // Initialize Estela Chatbot
+    initEstelaChatbot();
 });
 
 // SPA Tab Switching Logic
@@ -323,13 +524,21 @@ function switchTab(tabId) {
         'aba-geral': 'Visão Geral do Painel',
         'almoxarifado': 'Gestão de Almoxarifados',
         'boletim': 'Boletim de Denúncia',
-        'cadastro': 'Cadastro de Usuário',
+        'perfil': 'Perfil do Usuário',
         'guia-organizacao': 'Guia de Organização 5S',
         'notificacao': 'Notificações do Sistema',
         'plano-aula': 'Planos de Aula'
     };
     headerTitle.textContent = pageTitles[tabId] || 'SENAIVEST';
     currentTab = tabId;
+
+    // Close sidebar on navigation
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    if (sidebar && sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+    }
 
     // Reset Almoxarifado views if switching tabs
     if (tabId !== 'almoxarifado') {
@@ -437,6 +646,9 @@ function openNewPlanoModal() {
     document.getElementById('plano-tema-input').value = '';
     document.getElementById('plano-objetivos-input').value = '';
     
+    // Auto generate plano code
+    setupNextPlanoCode();
+
     // Reset temporary list
     tempPlanoMaterials = [];
     populatePlanoMaterialSelect();
@@ -562,9 +774,92 @@ function handleAddProductSubmit(e) {
 function handleBoletimSubmit(e) {
     e.preventDefault();
     const codigo = document.getElementById('boletim-codigo').value || 'DOC-UNNAMED';
-    const material = document.getElementById('boletim-material-nome').value;
+    const data = document.getElementById('boletim-data').value;
+    const curso = document.getElementById('boletim-curso').value;
     const prof = document.getElementById('boletim-professor').value || 'Docente';
+    const material = document.getElementById('boletim-material-nome').value;
     
+    // Handle tipo radio
+    const tipoRadio = document.querySelector('input[name="boletim-tipo"]:checked');
+    let tipo = tipoRadio ? tipoRadio.value : 'Outro';
+    if (tipo === 'Outro') {
+        const outroTexto = document.getElementById('boletim-tipo-outro-texto').value.trim();
+        if (outroTexto) tipo = outroTexto;
+    }
+    
+    const planoCodigo = document.getElementById('boletim-plano-codigo').value;
+    const origem = document.getElementById('boletim-origem').value;
+    const descricao = document.getElementById('boletim-descricao').value;
+    
+    // Handle situacao checkboxes
+    const situacoesChecked = [];
+    document.querySelectorAll('input[name="boletim-situacao"]:checked').forEach(cb => {
+        if (cb.value === 'Outro') {
+            const outroTexto = document.getElementById('boletim-situacao-outro').value.trim();
+            if (outroTexto) {
+                situacoesChecked.push(outroTexto);
+            } else {
+                situacoesChecked.push('Outro');
+            }
+        } else {
+            situacoesChecked.push(cb.value);
+        }
+    });
+    const situacao = situacoesChecked.join(', ');
+    
+    const qtdPrevista = document.getElementById('boletim-qtd-prevista').value;
+    const qtdEncontrada = document.getElementById('boletim-qtd-encontrada').value;
+    const qtdDiferenca = document.getElementById('boletim-qtd-diferenca').value;
+    const aluno = document.getElementById('boletim-aluno').value;
+    
+    // Observacao responsavel + observacoes gerais
+    const obsResponsavel = document.getElementById('boletim-obs').value.trim();
+    const obsGerais = document.getElementById('boletim-obs-gerais').value.trim();
+    let observacoes = obsGerais;
+    if (obsResponsavel) {
+        observacoes = obsResponsavel + (obsGerais ? ' | ' + obsGerais : '');
+    }
+    
+    // Handle medidas checkboxes
+    const medidasChecked = [];
+    document.querySelectorAll('input[name="boletim-medidas"]:checked').forEach(cb => {
+        if (cb.value === 'Outro') {
+            const outroTexto = document.getElementById('boletim-medida-outro').value.trim();
+            if (outroTexto) {
+                medidasChecked.push(outroTexto);
+            } else {
+                medidasChecked.push('Outro');
+            }
+        } else {
+            medidasChecked.push(cb.value);
+        }
+    });
+    const medidas = medidasChecked.join(', ');
+
+    const newBoletim = {
+        id: registeredBoletins.length + 1,
+        code: codigo,
+        date: data,
+        curso: curso,
+        professor: prof,
+        material: material,
+        tipo: tipo,
+        planoCodigo: planoCodigo,
+        origem: origem,
+        descricao: descricao,
+        situacao: situacao || 'Nenhuma especificada',
+        qtdPrevista: qtdPrevista,
+        qtdEncontrada: qtdEncontrada,
+        qtdDiferenca: qtdDiferenca,
+        aluno: aluno || 'Não identificado',
+        observacoes: observacoes || 'Nenhuma',
+        medidas: medidas || 'Nenhuma registrada',
+        status: 'Registrado'
+    };
+
+    registeredBoletins.push(newBoletim);
+    localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins));
+
     // Add activity log to dashboard
     addActivityLog(`Boletim de Ocorrência ${codigo} enviado por ${prof}`);
     
@@ -573,45 +868,21 @@ function handleBoletimSubmit(e) {
 
     showToast('Boletim de Ocorrência enviado com sucesso!', 'success');
     
+    // Render the updated list
+    renderRegisteredBoletins();
+
     // Reset form fields
     document.getElementById('boletim-form').reset();
     document.getElementById('boletim-data').value = new Date().toISOString().split('T')[0];
+    
+    // Auto generate next code
+    setupNextBoletimCode();
+    
     updateDashboardStats();
     
-    // Redirect to General view to check stats update
+    // Redirect to registered reports tab
     setTimeout(() => {
-        switchTab('aba-geral');
-    }, 1000);
-}
-
-// HANDLE CADASTRO SUBMISSION
-function handleCadastroSubmit(e) {
-    e.preventDefault();
-    const email = document.getElementById('cad-email').value;
-    const nome = document.getElementById('cad-nome').value;
-    const senha = document.getElementById('cad-senha').value;
-
-    // Basic password validation
-    const hasMinLength = senha.length >= 8;
-    const hasUpper = /[A-Z]/.test(senha);
-    const hasLower = /[a-z]/.test(senha);
-    const hasNumber = /[0-9]/.test(senha);
-
-    if (!hasMinLength || !hasUpper || !hasLower || !hasNumber) {
-        showToast('Senha inválida! Verifique os critérios mínimos de segurança.', 'error');
-        return;
-    }
-
-    addActivityLog(`Novo usuário cadastrado: ${nome}`);
-    addNotification('success', `Novo cadastro realizado`, `Usuário ${nome} (${email}) foi registrado no portal.`);
-
-    showToast('Cadastro realizado com sucesso!', 'success');
-    
-    document.getElementById('cadastro-form').reset();
-    updateDashboardStats();
-
-    setTimeout(() => {
-        switchTab('aba-geral');
+        switchTab('boletins-registrados');
     }, 1000);
 }
 
@@ -619,6 +890,7 @@ function handleCadastroSubmit(e) {
 function handleAddPlanoSubmit(e) {
     e.preventDefault();
     
+    const code = document.getElementById('plano-codigo-input').value;
     const date = document.getElementById('plano-data-input').value;
     const course = document.getElementById('plano-curso-input').value.trim();
     const topic = document.getElementById('plano-tema-input').value.trim();
@@ -631,6 +903,7 @@ function handleAddPlanoSubmit(e) {
 
     const newPlano = {
         id: lessonPlans.length + 1,
+        code,
         date,
         course,
         topic,
@@ -670,10 +943,14 @@ function renderLessonPlans() {
             ).join('');
         }
 
+        const planCode = plano.code || `PLAN-${500 + plano.id}`;
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formattedDate}</td>
-            <td><strong>${plano.course}</strong></td>
+            <td>
+                <span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige); margin-bottom:4px; display:inline-block;">${planCode}</span><br>
+                <strong>${plano.course}</strong>
+            </td>
             <td>${plano.topic}</td>
             <td>${plano.objectives}</td>
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
@@ -972,4 +1249,362 @@ function showToast(message, type = 'success') {
             toast.remove();
         }, 500);
     }, 3000);
+}
+
+// --- USER SESSION AND AVATAR CUSTOMIZER BEHAVIORS ---
+
+// Generate custom SVG string for avatar based on choices
+function generateAvatarSVG(custom) {
+    const bgColor = custom.bgColor || '#2c3e50';
+    const hair = custom.hair || 'ondulado';
+    const eyes = custom.eyes || 'classico';
+    const mouth = custom.mouth || 'amigavel';
+    const skinColor = '#fed5b2';
+
+    let hairSvg = '';
+    if (hair === 'ondulado') {
+        hairSvg = `<path d="M30 40c-2-8 3-15 15-18c15-4 22 5 24 12c1 3 0 10-2 12c-2-3-5-2-7-5c-2 6-8 7-11 4c-3 5-8 5-11 0c-2 4-5 3-8-5z" fill="#3e2723"/>`;
+    } else if (hair === 'curto') {
+        hairSvg = `<path d="M32 38c0-8 6-12 18-12s18 4 18 12c0-3-4-5-8-5c-4 0-6 2-10 2s-6-2-10-2c-4 0-8 2-8 5z" fill="#2c3e50"/>`;
+    } else if (hair === 'preso') {
+        hairSvg = `
+            <circle cx="50" cy="22" r="7" fill="#d35400"/>
+            <path d="M32 40c0-10 8-15 18-15s18 5 18 15c-3-5-8-6-18-6s-15 1-18 6z" fill="#d35400"/>
+        `;
+    } else if (hair === 'bone') {
+        hairSvg = `
+            <path d="M30 35c3-10 12-11 20-11s17 1 20 11H30z" fill="#005CA9"/>
+            <path d="M45 35c10-2 20 0 25 3c5 3 2 4-5 4H45z" fill="#002d62"/>
+        `;
+    }
+
+    let eyesSvg = '';
+    if (eyes === 'alegre') {
+        eyesSvg = `<path d="M41 43c1-2 4-2 5 0M54 43c1-2 4-2 5 0" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    } else if (eyes === 'escuros') {
+        eyesSvg = `
+            <path d="M36 41h28v4c0 3-3 6-6 6h-2c-2 0-4-2-4-4c0 2-2 4-4 4h-2c-3 0-6-3-6-6v-4z" fill="#111"/>
+            <path d="M36 41h28" stroke="#111" stroke-width="2"/>
+        `;
+    } else if (eyes === 'grau') {
+        eyesSvg = `
+            <circle cx="43" cy="44" r="5" stroke="#d3bca2" stroke-width="2" fill="none"/>
+            <circle cx="57" cy="44" r="5" stroke="#d3bca2" stroke-width="2" fill="none"/>
+            <line x1="48" y1="44" x2="52" y2="44" stroke="#d3bca2" stroke-width="2"/>
+            <path d="M42 44h2M56 44h2" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        `;
+    } else if (eyes === 'classico') {
+        eyesSvg = `
+            <circle cx="43" cy="44" r="2" fill="#000"/>
+            <circle cx="57" cy="44" r="2" fill="#000"/>
+        `;
+    }
+
+    let mouthSvg = '';
+    if (mouth === 'aberto') {
+        mouthSvg = `<path d="M42 52c0 5 4 8 8 8s8-3 8-8H42z" fill="#c0392b"/>`;
+    } else if (mouth === 'amigavel') {
+        mouthSvg = `<path d="M44 53q6 4 12 0" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    } else if (mouth === 'neutro') {
+        mouthSvg = `<line x1="44" y1="54" x2="56" y2="54" stroke="#000" stroke-width="2" stroke-linecap="round"/>`;
+    }
+
+    return `
+        <svg class="profile-img" viewBox="0 0 100 100" style="background:${bgColor}; display:block; width:100%; height:100%;">
+            <circle cx="50" cy="46" r="18" fill="${skinColor}"/>
+            <path d="M20 90c0-15 12-25 30-25s30 10 30 25v10H20z" fill="#34495e"/>
+            ${hairSvg}
+            ${eyesSvg}
+            ${mouthSvg}
+        </svg>
+    `;
+}
+
+// Update avatar in all containers
+function updateUserAvatar(user) {
+    const sidebarAvatarContainer = document.getElementById('sidebar-profile-img-container');
+    const headerAvatarContainer = document.getElementById('header-user-avatar-container');
+    const profileAvatarContainer = document.getElementById('profile-preview-avatar-container');
+    
+    let avatarHtml = '';
+    if (user.avatarType === 'uploaded' && user.avatarData) {
+        avatarHtml = `<img src="${user.avatarData}" class="profile-img" alt="Avatar">`;
+    } else {
+        const custom = user.customAvatar || {
+            bgColor: '#2c3e50',
+            hair: 'ondulado',
+            eyes: 'classico',
+            mouth: 'amigavel'
+        };
+        avatarHtml = generateAvatarSVG(custom);
+    }
+
+    if (sidebarAvatarContainer) sidebarAvatarContainer.innerHTML = avatarHtml;
+    if (headerAvatarContainer) {
+        headerAvatarContainer.innerHTML = avatarHtml;
+        const imgEl = headerAvatarContainer.querySelector('img, svg');
+        if (imgEl) {
+            imgEl.className = 'header-user-avatar';
+        }
+    }
+    if (profileAvatarContainer) profileAvatarContainer.innerHTML = avatarHtml;
+}
+
+// Update text details and avatar
+function updateUserUI(user) {
+    const sideName = document.getElementById('sidebar-profile-name');
+    const headName = document.getElementById('header-user-name');
+    const sideRole = document.getElementById('sidebar-profile-role');
+    const profileNameDisplay = document.getElementById('profile-user-name-display');
+    const profileEmailDisplay = document.getElementById('profile-user-email-display');
+
+    if (sideName) sideName.textContent = user.name;
+    if (headName) headName.textContent = user.name;
+    if (sideRole) sideRole.textContent = user.role || 'Administrador(a)';
+    if (profileNameDisplay) profileNameDisplay.textContent = user.name;
+    if (profileEmailDisplay) profileEmailDisplay.textContent = user.email;
+
+    const btnResetAvatar = document.getElementById('btn-reset-avatar');
+    if (btnResetAvatar) {
+        btnResetAvatar.style.display = user.avatarType === 'uploaded' ? 'block' : 'none';
+    }
+
+    updateUserAvatar(user);
+}
+
+// Select correct radio buttons on load
+function updateFormChoices(custom) {
+    if (!custom) return;
+    
+    const bgInput = document.querySelector(`input[name="avatar-bg"][value="${custom.bgColor}"]`);
+    const hairInput = document.querySelector(`input[name="avatar-hair"][value="${custom.hair}"]`);
+    const eyesInput = document.querySelector(`input[name="avatar-eyes"][value="${custom.eyes}"]`);
+    const mouthInput = document.querySelector(`input[name="avatar-mouth"][value="${custom.mouth}"]`);
+
+    if (bgInput) bgInput.checked = true;
+    if (hairInput) hairInput.checked = true;
+    if (eyesInput) eyesInput.checked = true;
+    if (mouthInput) mouthInput.checked = true;
+}
+
+// Read current form choices
+function getFormAvatarData() {
+    const bg = document.querySelector('input[name="avatar-bg"]:checked').value;
+    const hair = document.querySelector('input[name="avatar-hair"]:checked').value;
+    const eyes = document.querySelector('input[name="avatar-eyes"]:checked').value;
+    const mouth = document.querySelector('input[name="avatar-mouth"]:checked').value;
+    return { bgColor: bg, hair, eyes, mouth };
+}
+
+// Update live preview SVG
+function updateLivePreview() {
+    const customData = getFormAvatarData();
+    const svgHtml = generateAvatarSVG(customData);
+    const container = document.getElementById('profile-preview-avatar-container');
+    if (container) {
+        container.innerHTML = svgHtml;
+    }
+}
+
+// --- ESTELA VIRTUAL ASSISTANT LOGIC ---
+
+function getEstelaResponse(query) {
+    const q = query.toLowerCase();
+    
+    if (q.includes('olá') || q.includes('oi') || q.includes('estela') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite') || q.includes('hello')) {
+        return "Olá, querido(a) colega! Com a linha e agulha prontas, estou aqui para alinhavar qualquer dúvida que você tenha sobre a plataforma <strong>SENAIVEST</strong>. Pode perguntar!";
+    }
+    
+    if (q.includes('almoxarifado') || q.includes('estoque') || q.includes('material') || q.includes('categoria') || q.includes('lab') || q.includes('ferramenta') || q.includes('tecido') || q.includes('molde')) {
+        return "Nossos materiais estão divididos em 3 almoxarifados (Lab 1, Lab 2 e Lab 3). Acesse a aba <strong>Almoxarifado</strong>, selecione o laboratório e veja o catálogo separado por Ferramentas, Tecidos e Moldes. Você também pode transferir itens entre laboratórios clicando em <em>Transferir</em>!";
+    }
+    
+    if (q.includes('boletim') || q.includes('ocorrência') || q.includes('denúncia') || q.includes('avaria') || q.includes('quebro') || q.includes('perda') || q.includes('registro') || q.includes('pasta') || q.includes('registrado')) {
+        return "Para relatar agulhas quebradas, tecidos faltantes ou avarias, use a aba <strong>Boletim</strong>. O código do documento (`DOC-2026-XXX`) é gerado automaticamente! Ao enviar, o relatório será arquivado na pasta de <strong>Boletins Registrados</strong>, que você pode consultar a qualquer momento.";
+    }
+    
+    if (q.includes('plano') || q.includes('aula') || q.includes('turma') || q.includes('ficha') || q.includes('gerenciador')) {
+        return "No menu <strong>Plano de Aula</strong>, você pode criar planejamentos e associar insumos do estoque. O sistema gera um código de plano automático (`PLAN-XXX`) e cria uma Ficha de Controle de Materiais. Assim, tudo estará devidamente separado antes de iniciar as aulas!";
+    }
+    
+    if (q.includes('avatar') || q.includes('perfil') || q.includes('foto') || q.includes('personalizar') || q.includes('imagem') || q.includes('galeria')) {
+        return "Para ajustar sua foto ou avatar, vá no menu <strong>Perfil</strong>. Você tem duas opções: carregar uma foto real da sua galeria ou utilizar o painel interativo de personalização do avatar (onde pode mudar cor de fundo, cabelo, olhar e boca). Tudo atualiza na hora!";
+    }
+    
+    if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('retalho') || q.includes('limpeza') || q.includes('organização') || q.includes('5s') || q.includes('lixo') || q.includes('coleta')) {
+        return "O laboratório sustentável é o nosso forte! Na aba <strong>Guia de Organização</strong>, além das regras 5S para agulhas e máquinas, temos regras de reciclagem de tecidos (separar fibras naturais de sintéticas), descarte correto de moldes de papel kraft, encaixe inteligente e economia de energia nas máquinas industriais.";
+    }
+    
+    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use a aba <strong>Boletim</strong>; e para customizar seu visual use a aba <strong>Perfil</strong>. Se precisar, use um dos botões de sugestões rápidas!";
+}
+
+function initEstelaChatbot() {
+    const toggleBtn = document.getElementById('assistant-toggle-btn');
+    const chatWindow = document.getElementById('assistant-chat-window');
+    const closeBtn = document.getElementById('assistant-chat-close');
+    const chatForm = document.getElementById('assistant-chat-form');
+    const chatInput = document.getElementById('assistant-chat-input');
+    const chatMessages = document.getElementById('assistant-chat-messages');
+    const suggestionsContainer = document.getElementById('assistant-suggestions');
+
+    if (!toggleBtn || !chatWindow) return;
+
+    toggleBtn.addEventListener('click', () => {
+        chatWindow.classList.toggle('active');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            chatWindow.classList.remove('active');
+        });
+    }
+
+    function appendMessage(text, isUser = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+        msgDiv.innerHTML = `
+            <div class="msg-bubble">
+                ${text}
+            </div>
+        `;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    if (chatForm) {
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, true);
+            chatInput.value = '';
+
+            setTimeout(() => {
+                const estelaReply = getEstelaResponse(text);
+                appendMessage(estelaReply, false);
+            }, 600);
+        });
+    }
+
+    if (suggestionsContainer) {
+        suggestionsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-suggestion');
+            if (btn) {
+                const question = btn.getAttribute('data-question');
+                appendMessage(question, true);
+
+                setTimeout(() => {
+                    const estelaReply = getEstelaResponse(question);
+                    appendMessage(estelaReply, false);
+                }, 500);
+            }
+        });
+    }
+}
+
+// --- BOLETINS DE OCORRÊNCIA REGISTRADOS & CODE AUTO-GENERATORS ---
+
+// Mock registered reports data
+let initialBoletins = [
+    {
+        id: 1,
+        code: 'DOC-2026-001',
+        date: '2026-06-10',
+        curso: 'Costura Industrial A',
+        professor: 'Prof. Carlos',
+        material: 'Réguas de 60cm',
+        tipo: 'Ferramenta',
+        planoCodigo: 'PLAN-501',
+        origem: 'Lab 1',
+        descricao: 'Durante o traçado do molde base, duas réguas foram encontradas com trincas severas na escala centimétrica, inviabilizando medições precisas.',
+        situacao: 'Material danificado',
+        qtdPrevista: '30',
+        qtdEncontrada: '28',
+        qtdDiferenca: '2',
+        aluno: 'Grupo de modelagem da noite',
+        observacoes: 'Material substituído temporariamente por réguas sobressalentes do Lab 2.',
+        medidas: 'Orientação aos alunos, Registro em controle',
+        status: 'Registrado'
+    }
+];
+
+let registeredBoletins = JSON.parse(localStorage.getItem('registeredBoletins')) || initialBoletins;
+if (!localStorage.getItem('registeredBoletins')) {
+    localStorage.setItem('registeredBoletins', JSON.stringify(initialBoletins));
+}
+
+// Generate next DOC-2026-XXX code
+function setupNextBoletimCode() {
+    const inputCode = document.getElementById('boletim-codigo');
+    if (inputCode) {
+        const nextNum = registeredBoletins.length + 1;
+        inputCode.value = `DOC-2026-${String(nextNum).padStart(3, '0')}`;
+    }
+}
+
+// Generate next PLAN-XXX code
+function setupNextPlanoCode() {
+    const inputCode = document.getElementById('plano-codigo-input');
+    if (inputCode) {
+        const nextNum = 500 + lessonPlans.length + 1;
+        inputCode.value = `PLAN-${nextNum}`;
+    }
+}
+
+// Render the grid of registered reports
+function renderRegisteredBoletins() {
+    const container = document.getElementById('boletins-grid-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (registeredBoletins.length === 0) {
+        container.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhum boletim registrado encontrado.</div>`;
+        return;
+    }
+
+    const sorted = [...registeredBoletins].reverse();
+
+    sorted.forEach(b => {
+        const card = document.createElement('div');
+        card.className = 'boletim-card-file';
+        card.innerHTML = `
+            <h3 class="boletim-card-title">${b.code}</h3>
+            <div class="boletim-card-meta">Data: <strong>${b.date}</strong></div>
+            <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
+            <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
+            <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
+            <div class="boletim-card-status">
+                <span class="status-tag">${b.status}</span>
+                <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">Visualizar</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Open registered reports details modal
+function openBoletimDetailsModal(id) {
+    const b = registeredBoletins.find(item => item.id === id);
+    if (!b) return;
+
+    document.getElementById('view-boletim-doc-code').textContent = `BOLETIM DE OCORRÊNCIA – COD: ${b.code}`;
+    document.getElementById('view-boletim-data').textContent = b.date;
+    document.getElementById('view-boletim-origem').textContent = b.origem;
+    document.getElementById('view-boletim-curso').textContent = b.curso;
+    document.getElementById('view-boletim-professor').textContent = b.professor;
+    document.getElementById('view-boletim-material').textContent = b.material;
+    document.getElementById('view-boletim-tipo').textContent = b.tipo;
+    document.getElementById('view-boletim-plano-cód').textContent = b.planoCodigo;
+    document.getElementById('view-boletim-descricao').textContent = b.descricao;
+    document.getElementById('view-boletim-situacao').textContent = b.situacao;
+    document.getElementById('view-boletim-prevista').textContent = b.qtdPrevista;
+    document.getElementById('view-boletim-encontrada').textContent = b.qtdEncontrada;
+    document.getElementById('view-boletim-diferenca').textContent = b.qtdDiferenca;
+    document.getElementById('view-boletim-aluno').textContent = b.aluno;
+    document.getElementById('view-boletim-observacoes').textContent = b.observacoes;
+    document.getElementById('view-boletim-medidas').textContent = b.medidas;
+
+    document.getElementById('modal-view-boletim').classList.add('active');
 }

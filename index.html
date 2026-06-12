@@ -7,11 +7,44 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Registration Screen on enter -->
+    <div id="register-fullscreen-overlay" class="register-fullscreen-overlay" style="display: none;">
+        <div class="register-card">
+            <div class="register-card-header">
+                <h2>SENAIVEST</h2>
+                <p>Crie sua conta para acessar o painel do laboratório</p>
+            </div>
+            <form id="first-register-form">
+                <div class="form-group-reg">
+                    <label for="first-reg-nome">Nome Completo</label>
+                    <input type="text" id="first-reg-nome" class="form-control-reg" placeholder="Ex: Prof(a). Carol" required>
+                </div>
+                <div class="form-group-reg">
+                    <label for="first-reg-email">E-mail</label>
+                    <input type="email" id="first-reg-email" class="form-control-reg" placeholder="Ex: carol@senai.br" required>
+                </div>
+                <div class="form-group-reg">
+                    <label for="first-reg-senha">Senha</label>
+                    <input type="password" id="first-reg-senha" class="form-control-reg" placeholder="Mínimo 8 caracteres" required>
+                    <div class="cadastro-subtext-reg">
+                        * Mínimo de 8 caracteres<br>
+                        * Letras maiúsculas, minúsculas e número
+                    </div>
+                </div>
+                <button type="submit" class="btn-register-submit-large">CADASTRAR E ENTRAR</button>
+            </form>
+        </div>
+    </div>
+
     <div class="app-container">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
+            <button class="close-sidebar-btn" id="close-sidebar-btn" title="Fechar Menu">&times;</button>
             <div class="profile-section">
-                <div class="profile-img-container">
+                <div class="profile-img-container" id="sidebar-profile-img-container">
                     <!-- Placeholder avatar styled beautifully with SVG -->
                     <svg class="profile-img" viewBox="0 0 100 100" style="background:#2c3e50;">
                         <circle cx="50" cy="35" r="20" fill="#ecf0f1"/>
@@ -20,8 +53,8 @@
                         <path d="M30 35c0-10 10-15 20-15s20 5 20 15-5 20-20 20-20-10-20-20z" fill="#34495e" opacity="0.3"/>
                     </svg>
                 </div>
-                <h2 class="profile-name">Prof(a). Carol</h2>
-                <span class="profile-role">Administradora</span>
+                <h2 class="profile-name" id="sidebar-profile-name">Prof(a). Carol</h2>
+                <span class="profile-role" id="sidebar-profile-role">Administradora</span>
             </div>
             
             <ul class="nav-menu">
@@ -48,13 +81,19 @@
                         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                         Boletim
                     </a>
-                </li>
-                <li class="nav-item" data-tab="cadastro">
+                <li class="nav-item" data-tab="boletins-registrados">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                        Cadastro
+                        <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" fill="currentColor"/></svg>
+                        Boletins Registrados
                     </a>
                 </li>
+                 <li class="nav-item" data-tab="perfil">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="currentColor"/></svg>
+                        Perfil
+                    </a>
+                </li>
+
                 <li class="nav-item" data-tab="guia-organizacao">
                     <a class="nav-link">
                         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -85,18 +124,23 @@
             <!-- Header Bar -->
             <header class="content-header">
                 <div class="header-title-container">
+                    <button class="menu-toggle-btn" id="menu-toggle-btn" title="Abrir Menu">
+                        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" fill="currentColor"/></svg>
+                    </button>
                     <h1 class="header-title" id="page-current-title">Painel Geral</h1>
                 </div>
                 <div class="header-user-info">
                     <div class="header-user-text">
                         <div class="header-welcome">Bem-vindo,</div>
-                        <div class="header-username">Geovana</div>
+                        <div class="header-username" id="header-user-name">Geovana</div>
                     </div>
-                    <!-- Small profile circle avatar -->
-                    <svg class="header-user-avatar" viewBox="0 0 100 100" style="background:#34495e;">
-                        <circle cx="50" cy="35" r="20" fill="#fff"/>
-                        <path d="M20 80c0-20 15-30 30-30s30 10 30 30H20z" fill="#fff"/>
-                    </svg>
+                    <!-- Small profile circle avatar container -->
+                    <div class="header-user-avatar-container" id="header-user-avatar-container">
+                        <svg class="header-user-avatar" viewBox="0 0 100 100" style="background:#34495e;">
+                            <circle cx="50" cy="35" r="20" fill="#fff"/>
+                            <path d="M20 80c0-20 15-30 30-30s30 10 30 30H20z" fill="#fff"/>
+                        </svg>
+                    </div>
                 </div>
             </header>
 
@@ -106,7 +150,7 @@
                     <!-- Hero Banner -->
                     <div class="inicio-banner">
                         <h1 class="inicio-banner-title">SENAIVEST</h1>
-                        <button class="btn-cadastrese" onclick="switchTab('cadastro')">Cadastre-se</button>
+                        <button class="btn-cadastrese" onclick="switchTab('perfil')">Meu Perfil</button>
                     </div>
 
                     <!-- SENAI Slogan Bar -->
@@ -319,7 +363,7 @@
                         <div class="form-row">
                             <div class="form-group-boletim">
                                 <label for="boletim-codigo">Código do Documento:</label>
-                                <input type="text" id="boletim-codigo" placeholder="ex: DOC-2026-004">
+                                <input type="text" id="boletim-codigo" placeholder="ex: DOC-2026-004" readonly>
                             </div>
                             <div class="form-group-boletim">
                                 <label for="boletim-data">Data:</label>
@@ -481,38 +525,176 @@
                 </div>
             </section>
 
-            <!-- 5. CADASTRO SECTION -->
-            <section id="cadastro" class="view-section">
-                <div class="cadastro-page-container">
-                    <div class="cadastro-header">
-                        <h1>CADASTRO</h1>
-                    </div>
+ 
+            <!-- PROFILE SECTION -->
+            <section id="perfil" class="view-section">
+                <div class="perfil-container">
+                    <h2 class="section-title">Perfil do Usuário</h2>
                     
-                    <form id="cadastro-form" class="cadastro-form-overlay">
-                        <!-- Email Field (Long Pill) -->
-                        <div class="cadastro-form-group">
-                            <input type="email" id="cad-email" class="cadastro-input-pill" placeholder="Email:" required>
-                        </div>
-                        
-                        <!-- Name Field (Medium Pill) -->
-                        <div class="cadastro-form-group medium">
-                            <input type="text" id="cad-nome" class="cadastro-input-pill" placeholder="Nome:" required>
-                        </div>
-                        
-                        <!-- Password Field (Short Pill) -->
-                        <div class="cadastro-form-group short">
-                            <input type="password" id="cad-senha" class="cadastro-input-pill" placeholder="Senha:" required>
-                            <div class="cadastro-subtext">
-                                X mínimo de 8 caracteres<br>
-                                X letras maiúsculas, minúsculas e número.
+                    <div class="perfil-grid">
+                        <!-- Left Column: User Info & Photo Upload -->
+                        <div class="perfil-card main-info-card">
+                            <div class="avatar-preview-wrapper">
+                                <div class="profile-preview-avatar-container" id="profile-preview-avatar-container">
+                                    <!-- Dynamic Avatar rendered by JS -->
+                                </div>
                             </div>
+                            <h3 class="perfil-user-name" id="profile-user-name-display">Nome do Usuário</h3>
+                            <p class="perfil-user-email" id="profile-user-email-display">usuario@senai.br</p>
+                            <span class="perfil-user-badge">Docente / Administrador</span>
+
+                            <div class="upload-area" id="avatar-upload-area">
+                                <span class="upload-icon">📷</span>
+                                <p class="upload-title">Enviar Foto da Galeria</p>
+                                <p class="upload-subtitle">Arraste a foto ou clique para buscar</p>
+                                <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+                                <button type="button" class="btn-upload-trigger" onclick="document.getElementById('avatar-file-input').click()">Escolher Arquivo</button>
+                            </div>
+                            
+                            <button type="button" class="btn-reset-avatar" id="btn-reset-avatar" style="display:none;">Remover Foto Personalizada</button>
                         </div>
 
-                        <!-- Actions Row -->
-                        <div class="cadastro-actions">
-                            <button type="submit" class="btn-cadastro-submit">CADASTRAR</button>
+                        <!-- Right Column: Interactive Custom Avatar Maker -->
+                        <div class="perfil-card avatar-editor-card">
+                            <h3 class="editor-section-title">Personalizar Avatar</h3>
+                            <p class="editor-section-subtitle">Monte seu avatar exclusivo selecionando os estilos abaixo:</p>
+                            
+                            <form id="avatar-customize-form">
+                                <!-- Background Color Swatches -->
+                                <div class="editor-group">
+                                    <label class="editor-label">Cor de Fundo</label>
+                                    <div class="swatches-grid">
+                                        <label class="swatch-label" style="background-color: #2c3e50;">
+                                            <input type="radio" name="avatar-bg" value="#2c3e50" checked>
+                                            <span class="swatch-check"></span>
+                                        </label>
+                                        <label class="swatch-label" style="background-color: #005CA9;">
+                                            <input type="radio" name="avatar-bg" value="#005CA9">
+                                            <span class="swatch-check"></span>
+                                        </label>
+                                        <label class="swatch-label" style="background-color: #1abc9c;">
+                                            <input type="radio" name="avatar-bg" value="#1abc9c">
+                                            <span class="swatch-check"></span>
+                                        </label>
+                                        <label class="swatch-label" style="background-color: #e74c3c;">
+                                            <input type="radio" name="avatar-bg" value="#e74c3c">
+                                            <span class="swatch-check"></span>
+                                        </label>
+                                        <label class="swatch-label" style="background-color: #8e44ad;">
+                                            <input type="radio" name="avatar-bg" value="#8e44ad">
+                                            <span class="swatch-check"></span>
+                                        </label>
+                                        <label class="swatch-label" style="background-color: #d3bca2;">
+                                            <input type="radio" name="avatar-bg" value="#d3bca2">
+                                            <span class="swatch-check"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Hair Selection -->
+                                <div class="editor-group">
+                                    <label class="editor-label">Cabelo e Estilo</label>
+                                    <div class="options-grid">
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-hair" value="ondulado" checked>
+                                            <div class="option-content">
+                                                <span class="option-title">Ondulado (Carol)</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-hair" value="curto">
+                                            <div class="option-content">
+                                                <span class="option-title">Curto (Carlos)</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-hair" value="preso">
+                                            <div class="option-content">
+                                                <span class="option-title">Preso (Emanuela)</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-hair" value="bone">
+                                            <div class="option-content">
+                                                <span class="option-title">Boné Têxtil</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Eyes Selection -->
+                                <div class="editor-group">
+                                    <label class="editor-label">Olhar</label>
+                                    <div class="options-grid">
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-eyes" value="classico" checked>
+                                            <div class="option-content">
+                                                <span class="option-title">Clássico</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-eyes" value="alegre">
+                                            <div class="option-content">
+                                                <span class="option-title">Alegre</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-eyes" value="grau">
+                                            <div class="option-content">
+                                                <span class="option-title">Óculos de Grau</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-eyes" value="escuros">
+                                            <div class="option-content">
+                                                <span class="option-title">Óculos Escuros</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Mouth Selection -->
+                                <div class="editor-group">
+                                    <label class="editor-label">Expressão (Boca)</label>
+                                    <div class="options-grid">
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-mouth" value="amigavel" checked>
+                                            <div class="option-content">
+                                                <span class="option-title">Sorriso Amigável</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-mouth" value="aberto">
+                                            <div class="option-content">
+                                                <span class="option-title">Sorriso Aberto</span>
+                                            </div>
+                                        </label>
+                                        <label class="option-card">
+                                            <input type="radio" name="avatar-mouth" value="neutro">
+                                            <div class="option-content">
+                                                <span class="option-title">Neutro</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn-save-avatar" id="btn-save-avatar">Salvar Personalização</button>
+                            </form>
                         </div>
-                    </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BOLETINS REGISTRADOS SECTION -->
+            <section id="boletins-registrados" class="view-section">
+                <div class="content-container">
+                    <h2 class="section-title">Pasta de Registros de Ocorrências</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem;">Consulte e visualize todos os boletins de ocorrência enviados para a coordenação:</p>
+                    
+                    <!-- Grid of reports -->
+                    <div class="boletins-grid" id="boletins-grid-container">
+                        <!-- Dynamically populated by JS -->
+                    </div>
                 </div>
             </section>
 
@@ -550,17 +732,68 @@
                         </div>
                     </div>
 
-                    <!-- Visual Guidelines Certo vs Errado -->
+                    <!-- Diretrizes 5S e Sustentabilidade -->
                     <div class="certo-errado-section">
                         <h3 class="section-title" style="font-size:1.3rem; margin-bottom:20px;">DIRETRIZES VISUAIS (5S)</h3>
-                        <div class="certo-errado-grid">
-                            <div class="visual-column certo">
-                                <h4>✓ ORGANIZADO (Certo)</h4>
-                                <div class="visual-placeholder"></div>
+                        <div class="visual-column-single">
+                            <h4>✓ LABORATÓRIO ORGANIZADO</h4>
+                            <div class="visual-placeholder-single"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sustentabilidade e Reciclagem -->
+                    <div class="sustentabilidade-section">
+                        <h3 class="section-title" style="font-size:1.4rem; color: #2ecc71;">🌱 Sustentabilidade e Reciclagem no Laboratório</h3>
+                        <p class="sustentabilidade-subtitle">Cuidar do nosso ambiente de trabalho e reduzir o desperdício é um compromisso de todos. Siga as diretrizes ecológicas:</p>
+                        
+                        <div class="eco-grid">
+                            <div class="eco-card">
+                                <div class="eco-card-header">
+                                    <span class="eco-icon">♻️</span>
+                                    <h4>Como Reciclar Tecidos</h4>
+                                </div>
+                                <p>Separe as sobras e retalhos de tecido em caixas coletoras específicas:</p>
+                                <ul class="eco-list">
+                                    <li><strong>Fibras Naturais (Algodão, Linho):</strong> Encaminhe para a compostagem têxtil ou doação para artesanato.</li>
+                                    <li><strong>Fibras Sintéticas (Poliéster, Cetim):</strong> Separe para reciclagem química ou enchimento industrial.</li>
+                                    <li>Nunca descarte retalhos de tecido no lixo comum!</li>
+                                </ul>
                             </div>
-                            <div class="visual-column errado">
-                                <h4>✗ DESORGANIZADO (Errado)</h4>
-                                <div class="visual-placeholder"></div>
+
+                            <div class="eco-card">
+                                <div class="eco-card-header">
+                                    <span class="eco-icon">🗑️</span>
+                                    <h4>Coleta Seletiva de Papel</h4>
+                                </div>
+                                <p>Os papéis utilizados no laboratório devem ser descartados com consciência:</p>
+                                <ul class="eco-list">
+                                    <li>Dobre e organize as sobras limpas de papel kraft e papel manteiga para reutilização em pequenos moldes.</li>
+                                    <li>Papéis sem condições de uso devem ser picados e descartados na lixeira azul de papel reciclável.</li>
+                                </ul>
+                            </div>
+
+                            <div class="eco-card">
+                                <div class="eco-card-header">
+                                    <span class="eco-icon">✂️</span>
+                                    <h4>Otimização e Redução</h4>
+                                </div>
+                                <p>Planeje o layout dos moldes antes de cortar para evitar o desperdício de matéria-prima:</p>
+                                <ul class="eco-list">
+                                    <li>Realize o encaixe dos moldes de forma otimizada (técnica de encaixe zero-desperdício).</li>
+                                    <li>Use giz para marcar as linhas de costura precisamente, evitando erros e perdas de tecidos.</li>
+                                </ul>
+                            </div>
+
+                            <div class="eco-card">
+                                <div class="eco-card-header">
+                                    <span class="eco-icon">🔌</span>
+                                    <h4>Economia de Energia</h4>
+                                </div>
+                                <p>Reduza o consumo elétrico no laboratório de forma ativa:</p>
+                                <ul class="eco-list">
+                                    <li>Desligue a máquina de costura e o ferro de passar imediatamente ao terminar a atividade.</li>
+                                    <li>Apague as luzes das estações de trabalho vazias e aproveite ao máximo a iluminação natural das janelas.</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -628,7 +861,7 @@
                     <div class="footer-col">
                         <h4>Serviços</h4>
                         <ul class="footer-links">
-                            <li><a onclick="switchTab('cadastro')">Cadastre-se</a></li>
+                            <li><a onclick="switchTab('perfil')">Meu Perfil</a></li>
                             <li><a href="#">Cartão presente</a></li>
                             <li><a href="#">Mapa do site</a></li>
                             <li><a onclick="switchTab('almoxarifado')">Guia de produtos</a></li>
@@ -734,6 +967,11 @@
             </div>
             <form id="form-add-plano">
                 <div class="modal-body">
+                    <div class="form-group">
+                        <label for="plano-codigo-input">Código do Plano</label>
+                        <input type="text" id="plano-codigo-input" class="form-control" readonly>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="plano-data-input">Data da Aula</label>
                         <input type="date" id="plano-data-input" class="form-control" required>
@@ -870,6 +1108,138 @@
             <div class="modal-footer">
                 <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-view-plano-detalhes')">Fechar Ficha</button>
             </div>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: VIEW DETAILED BOLETIM DE OCORRÊNCIA -->
+    <div class="modal-overlay" id="modal-view-boletim">
+        <div class="modal-box" style="max-width: 650px;">
+            <div class="modal-header">
+                <h2>Detalhamento do Boletim</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-view-boletim')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="boletim-paper" style="box-shadow: none; padding: 20px 0; margin: 0; background: none; border: none;">
+                    <div class="boletim-title" id="view-boletim-doc-code" style="font-size: 1.15rem; letter-spacing: 0.5px;">
+                        BOLETIM DE OCORRÊNCIA – COD: DOC-2026-000
+                    </div>
+                    
+                    <div style="margin-top: 20px; line-height: 1.8; color: var(--text-light);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
+                            <div><strong>Data:</strong> <span id="view-boletim-data"></span></div>
+                            <div><strong>Lab. Origem:</strong> <span id="view-boletim-origem"></span></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-top: 10px;">
+                            <div><strong>Curso/Turma:</strong> <span id="view-boletim-curso"></span></div>
+                            <div><strong>Professor:</strong> <span id="view-boletim-professor"></span></div>
+                        </div>
+                        <div style="border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-top: 10px;">
+                            <div><strong>Material Ocorrido:</strong> <span id="view-boletim-material"></span></div>
+                            <div><strong>Tipo de Material:</strong> <span id="view-boletim-tipo"></span></div>
+                            <div><strong>Cód. Plano associado:</strong> <span id="view-boletim-plano-cód"></span></div>
+                        </div>
+                        
+                        <div style="border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-top: 10px;">
+                            <strong>Descrição do Ocorrido:</strong>
+                            <p id="view-boletim-descricao" style="background: var(--bg-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; min-height: 50px; white-space: pre-wrap;"></p>
+                        </div>
+
+                        <div style="border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-top: 10px;">
+                            <div><strong>Situação:</strong> <span id="view-boletim-situacao"></span></div>
+                            <div style="margin-top: 5px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                                <div><strong>Qtd Prevista:</strong> <span id="view-boletim-prevista"></span></div>
+                                <div><strong>Qtd Encontrada:</strong> <span id="view-boletim-encontrada"></span></div>
+                                <div><strong>Diferença:</strong> <span id="view-boletim-diferenca" style="color: var(--accent-red); font-weight: 700;"></span></div>
+                            </div>
+                        </div>
+
+                        <div style="border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-top: 10px;">
+                            <div><strong>Aluno/Grupo Responsável:</strong> <span id="view-boletim-aluno"></span></div>
+                            <div><strong>Observações:</strong> <span id="view-boletim-observacoes" style="color: var(--text-muted);"></span></div>
+                            <div style="margin-top: 5px;"><strong>Medidas Adotadas:</strong> <span id="view-boletim-medidas"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-view-boletim')">Fechar Relatório</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIRTUAL ASSISTANT: ESTELA -->
+    <div class="assistant-container" id="assistant-container">
+        <!-- Floating circular button -->
+        <button class="assistant-toggle-btn" id="assistant-toggle-btn" title="Falar com a Estela">
+            <span class="assistant-pulse"></span>
+            <svg class="assistant-icon-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="#1b3822" stroke="#2ecc71" stroke-width="2"/>
+                <path d="M25 65c15 15 35 15 50 0M20 70c20 20 40 20 60 0" stroke="#f1c40f" stroke-width="3" fill="none" stroke-dasharray="2 3"/>
+                <circle cx="50" cy="22" r="10" fill="#3e2723"/>
+                <circle cx="50" cy="45" r="22" fill="#fed5b2"/>
+                <path d="M28 42c5-10 15-12 22-12s17 2 22 12c-5-6-12-8-22-8s-17 2-22 8z" fill="#3e2723"/>
+                <circle cx="42" cy="45" r="6" stroke="#d3bca2" stroke-width="2" fill="none"/>
+                <circle cx="58" cy="45" r="6" stroke="#d3bca2" stroke-width="2" fill="none"/>
+                <line x1="48" y1="45" x2="52" y2="45" stroke="#d3bca2" stroke-width="2"/>
+                <circle cx="42" cy="45" r="2" fill="#000"/>
+                <circle cx="58" cy="45" r="2" fill="#000"/>
+                <path d="M44 54q6 4 12 0" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+            <span class="assistant-badge-online"></span>
+        </button>
+
+        <!-- Chat window drawer -->
+        <div class="assistant-chat-window" id="assistant-chat-window">
+            <div class="chat-header">
+                <div class="chat-header-profile">
+                    <div class="chat-avatar-mini">
+                        <svg viewBox="0 0 100 100" style="width:100%; height:100%;">
+                            <circle cx="50" cy="50" r="48" fill="#1b3822"/>
+                            <path d="M25 65c15 15 35 15 50 0" stroke="#f1c40f" stroke-width="4" fill="none" stroke-dasharray="2 2"/>
+                            <circle cx="50" cy="25" r="12" fill="#3e2723"/>
+                            <circle cx="50" cy="48" r="22" fill="#fed5b2"/>
+                            <path d="M28 45c5-10 15-12 22-12s17 2 22 12c-5-6-12-8-22-8s-17 2-22 8z" fill="#3e2723"/>
+                            <circle cx="42" cy="48" r="6" stroke="#d3bca2" stroke-width="2" fill="none"/>
+                            <circle cx="58" cy="48" r="6" stroke="#d3bca2" stroke-width="2" fill="none"/>
+                            <line x1="48" y1="48" x2="52" y2="48" stroke="#d3bca2" stroke-width="2"/>
+                            <circle cx="42" cy="48" r="2" fill="#000"/>
+                            <circle cx="58" cy="48" r="2" fill="#000"/>
+                            <path d="M44 57q6 4 12 0" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="chat-header-info">
+                        <span class="chat-assistant-name">Estela</span>
+                        <span class="chat-assistant-title">Especialista Têxtil</span>
+                        <span class="chat-online-status">● Online</span>
+                    </div>
+                </div>
+                <button class="chat-close-btn" id="assistant-chat-close" title="Minimizar Chat">&times;</button>
+            </div>
+            
+            <div class="chat-messages" id="assistant-chat-messages">
+                <div class="message assistant">
+                    <div class="msg-bubble">
+                        Olá! Sou a <strong>Estela</strong>, sua assistente virtual de costura e modelagem. 🧵✂️<br><br>
+                        Com a precisão de um corte sob medida, posso te ajudar a entender tudo sobre o painel da <strong>SENAIVEST</strong>! Qual é a sua dúvida de hoje?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div class="chat-quick-suggestions" id="assistant-suggestions">
+                <button class="btn-suggestion" data-question="Como consultar o estoque do almoxarifado?">📦 Consultar Estoque</button>
+                <button class="btn-suggestion" data-question="Como enviar um Boletim de Ocorrência?">📝 Enviar Ocorrência</button>
+                <button class="btn-suggestion" data-question="Como personalizar meu avatar?">👤 Personalizar Avatar</button>
+                <button class="btn-suggestion" data-question="Como cuidar do meio ambiente no laboratório?">🌱 Coleta Seletiva & Retalhos</button>
+            </div>
+
+            <!-- Chat input -->
+            <form class="chat-input-area" id="assistant-chat-form">
+                <input type="text" id="assistant-chat-input" placeholder="Digite sua dúvida aqui..." autocomplete="off" required>
+                <button type="submit" class="btn-send-chat" title="Enviar Mensagem">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
+                </button>
+            </form>
         </div>
     </div>
 
