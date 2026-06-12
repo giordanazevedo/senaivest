@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENAIVEST - Painel de Controle</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="profile-section">
+                <div class="profile-img-container">
+                    <!-- Placeholder avatar styled beautifully with SVG -->
+                    <svg class="profile-img" viewBox="0 0 100 100" style="background:#2c3e50;">
+                        <circle cx="50" cy="35" r="20" fill="#ecf0f1"/>
+                        <path d="M20 80c0-20 15-30 30-30s30 10 30 30H20z" fill="#ecf0f1"/>
+                        <!-- Hair outline for Prof. Carol styling -->
+                        <path d="M30 35c0-10 10-15 20-15s20 5 20 15-5 20-20 20-20-10-20-20z" fill="#34495e" opacity="0.3"/>
+                    </svg>
+                </div>
+                <h2 class="profile-name">Prof(a). Carol</h2>
+                <span class="profile-role">Administradora</span>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" data-tab="inicio">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                        Início
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="aba-geral">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
+                        Aba Geral
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="almoxarifado">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 12H9v-2h6v2zm0-4H9V10h6v2z"/></svg>
+                        Almoxarifado
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="boletim">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        Boletim
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="cadastro">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        Cadastro
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="guia-organizacao">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Guia de Organização
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="notificacao">
+                    <a class="nav-link" id="nav-notif-link">
+                        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                        Notificação
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="plano-aula">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        Plano de Aula
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <p>&copy; 2026 SENAIVEST</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="content-header">
+                <div class="header-title-container">
+                    <h1 class="header-title" id="page-current-title">Painel Geral</h1>
+                </div>
+                <div class="header-user-info">
+                    <div class="header-user-text">
+                        <div class="header-welcome">Bem-vindo,</div>
+                        <div class="header-username">Geovana</div>
+                    </div>
+                    <!-- Small profile circle avatar -->
+                    <svg class="header-user-avatar" viewBox="0 0 100 100" style="background:#34495e;">
+                        <circle cx="50" cy="35" r="20" fill="#fff"/>
+                        <path d="M20 80c0-20 15-30 30-30s30 10 30 30H20z" fill="#fff"/>
+                    </svg>
+                </div>
+            </header>
+
+            <!-- 1. INÍCIO SECTION -->
+            <section id="inicio" class="view-section active">
+                <div class="content-container">
+                    <!-- Hero Banner -->
+                    <div class="inicio-banner">
+                        <h1 class="inicio-banner-title">SENAIVEST</h1>
+                        <button class="btn-cadastrese" onclick="switchTab('cadastro')">Cadastre-se</button>
+                    </div>
+
+                    <!-- SENAI Slogan Bar -->
+                    <div class="slogan-bar">
+                        <div class="senai-logo-text">SENAI</div>
+                        <div class="slogan-text">O FUTURO DA INDÚSTRIA COMEÇA AQUI</div>
+                    </div>
+
+                    <!-- Closet Inspiration Section -->
+                    <h2 class="section-title">Inspire-se e monte seu almoxarifado</h2>
+                    <div class="inspire-grid">
+                        <div class="inspire-card" style="background-image: url('assets/inspire_1.png');"></div>
+                        <div class="inspire-card" style="background-image: url('assets/inspire_2.png');"></div>
+                        <div class="inspire-card" style="background-image: url('assets/inspire_3.png');"></div>
+                    </div>
+
+                    <!-- Separated by Categories Section -->
+                    <h2 class="section-title">Separados por categoria</h2>
+                    <div class="category-grid">
+                        <div class="category-card" style="background-image: url('assets/cat_ferramentas.png');"></div>
+                        <div class="category-card" style="background-image: url('assets/cat_tecidos.png');"></div>
+                        <div class="category-card" style="background-image: url('assets/cat_moldes.png');"></div>
+                    </div>
+
+                    <!-- Organization Center -->
+                    <div class="organizacao-section">
+                        <h2 class="organizacao-title">ORGANIZAÇÃO</h2>
+                        <div class="organizacao-shortcuts">
+                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                                <div class="shortcut-circle">🧵</div>
+                                <span class="shortcut-label">Tecido</span>
+                            </div>
+                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                                <div class="shortcut-circle">✂️</div>
+                                <span class="shortcut-label">Ferramentas</span>
+                            </div>
+                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                                <div class="shortcut-circle">📏</div>
+                                <span class="shortcut-label">Moldes</span>
+                            </div>
+                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                                <div class="shortcut-circle">🪡</div>
+                                <span class="shortcut-label">Linha</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photographic Banner -->
+                    <div class="bottom-banner-photo"></div>
+                </div>
+            </section>
+
+            <!-- 2. ABA GERAL SECTION -->
+            <section id="aba-geral" class="view-section">
+                <div class="content-container">
+                    <h2 class="section-title">Visão Geral do Sistema</h2>
+                    
+                    <!-- Stats Grid -->
+                    <div class="general-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-content">
+                                <h3>Total de Itens</h3>
+                                <div class="stat-value" id="stats-total-items">14</div>
+                            </div>
+                            <div class="stat-icon">📦</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-content">
+                                <h3>Boletins Enviados</h3>
+                                <div class="stat-value" id="stats-total-boletins">1</div>
+                            </div>
+                            <div class="stat-icon">📝</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-content">
+                                <h3>Planos de Aula</h3>
+                                <div class="stat-value" id="stats-total-planos">3</div>
+                            </div>
+                            <div class="stat-icon">📋</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-content">
+                                <h3>Notificações</h3>
+                                <div class="stat-value" id="stats-total-alerts">3</div>
+                            </div>
+                            <div class="stat-icon">🔔</div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Data Row -->
+                    <div class="dashboard-row">
+                        <!-- Chart Mockup -->
+                        <div class="dashboard-chart-box">
+                            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px;">Empréstimos Semanais por Categoria</h3>
+                            <div class="chart-placeholder">
+                                <div class="chart-bar-container">
+                                    <div class="chart-bar" style="height: 80%;"></div>
+                                    <span class="chart-label">Tecidos</span>
+                                </div>
+                                <div class="chart-bar-container">
+                                    <div class="chart-bar" style="height: 55%;"></div>
+                                    <span class="chart-label">Réguas</span>
+                                </div>
+                                <div class="chart-bar-container">
+                                    <div class="chart-bar" style="height: 90%;"></div>
+                                    <span class="chart-label">Linhas</span>
+                                </div>
+                                <div class="chart-bar-container">
+                                    <div class="chart-bar" style="height: 35%;"></div>
+                                    <span class="chart-label">Moldes</span>
+                                </div>
+                                <div class="chart-bar-container">
+                                    <div class="chart-bar" style="height: 20%;"></div>
+                                    <span class="chart-label">Tesouras</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activities List -->
+                        <div class="dashboard-list-box">
+                            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px;">Últimas Ações</h3>
+                            <ul class="activity-list" id="dashboard-activity-list">
+                                <li class="activity-item">
+                                    <span class="activity-text">Boletim de ocorrência criado</span>
+                                    <span class="activity-time">há 10 min</span>
+                                </li>
+                                <li class="activity-item">
+                                    <span class="activity-text">Prof. Carlos retirou 15x réguas</span>
+                                    <span class="activity-time">há 2 horas</span>
+                                </li>
+                                <li class="activity-item">
+                                    <span class="activity-text">Novo plano de aula cadastrado</span>
+                                    <span class="activity-time">há 1 dia</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. ALMOXARIFADO SECTION -->
+            <section id="almoxarifado" class="view-section">
+                <!-- VIEW 3A: LAB SELECTION MENU -->
+                <div id="almox-selector-view" class="almox-selector-container">
+                    <div class="almox-selector-header">
+                        <h1>ALMOXARIFADOS</h1>
+                    </div>
+                    <div class="almox-selector-content">
+                        <!-- Mannequin layout decoration -->
+                        <svg class="almox-mannequin-left" viewBox="0 0 100 100" style="max-width:140px; fill:#fff;">
+                            <circle cx="50" cy="20" r="10"/>
+                            <path d="M45 32h10c5 0 9 4 9 9v30h-4v25h-10V71H40v25H30V71h-4V41c0-5 4-9 9-9z"/>
+                        </svg>
+                        
+                        <div class="almox-buttons-group">
+                            <button class="almox-button" onclick="openLab(1)">ALMOXARIFADO LAB 1</button>
+                            <button class="almox-button" onclick="openLab(2)">ALMOXARIFADO LAB 2</button>
+                            <button class="almox-button" onclick="openLab(3)">ALMOXARIFADO LAB 3</button>
+                        </div>
+                        
+                        <!-- Mannequin layout decoration -->
+                        <svg class="almox-mannequin-right" viewBox="0 0 100 100" style="max-width:140px; fill:#cbb49c;">
+                            <circle cx="50" cy="20" r="10"/>
+                            <path d="M42 30h16c4 0 7 3 7 7v25c0 3-2 5-5 5H40c-3 0-5-2-5-5V37c0-4 3-7 7-7z"/>
+                            <rect x="47" y="67" width="6" height="30" fill="#666"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- VIEW 3B: LAB DETAILED INVENTORY GRID -->
+                <div id="almox-inventory-view" class="almox-inventory-container" style="display:none;">
+                    <div class="almox-inventory-header">
+                        <h1 id="inventory-lab-title">ALMOXARIFADO 1</h1>
+                        <button class="btn-back-almox" onclick="backToAlmoxSelector()">← Voltar</button>
+                    </div>
+                    <div class="almox-inventory-body">
+                        <!-- FERRAMENTAS CATEGORY -->
+                        <h2 class="category-section-title">FERRAMENTAS</h2>
+                        <div class="items-grid" id="grid-ferramentas">
+                            <!-- Dynamically Loaded by app.js -->
+                        </div>
+
+                        <!-- TECIDOS CATEGORY -->
+                        <h2 class="category-section-title">TECIDOS</h2>
+                        <div class="items-grid" id="grid-tecidos">
+                            <!-- Dynamically Loaded by app.js -->
+                        </div>
+
+                        <!-- MOLDES CATEGORY -->
+                        <h2 class="category-section-title">MOLDES</h2>
+                        <div class="items-grid" id="grid-moldes">
+                            <!-- Dynamically Loaded by app.js -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. BOLETIM DE OCORRÊNCIA SECTION -->
+            <section id="boletim" class="view-section">
+                <div class="boletim-page-container">
+                    <div class="boletim-header">
+                        <h1>BOLETIM DE DENÚNCIA</h1>
+                    </div>
+                    
+                    <form id="boletim-form" class="boletim-paper">
+                        <div class="boletim-title">
+                            BOLETIM DE OCORRÊNCIA DE MATERIAL – ALMOXARIFADO DE VESTUÁRIO
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label for="boletim-codigo">Código do Documento:</label>
+                                <input type="text" id="boletim-codigo" placeholder="ex: DOC-2026-004">
+                            </div>
+                            <div class="form-group-boletim">
+                                <label for="boletim-data">Data:</label>
+                                <input type="date" id="boletim-data">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label for="boletim-curso">Curso/Turma:</label>
+                                <input type="text" id="boletim-curso" placeholder="ex: Costura Industrial A">
+                            </div>
+                            <div class="form-group-boletim">
+                                <label for="boletim-professor">Professor Responsável:</label>
+                                <input type="text" id="boletim-professor" placeholder="ex: Prof. Carlos">
+                            </div>
+                        </div>
+
+                        <div class="boletim-section-title">1. Identificação do Material</div>
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label for="boletim-material-nome">Nome do material:</label>
+                                <input type="text" id="boletim-material-nome" placeholder="Nome do item ocorrido">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label>Tipo:</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="radio" name="boletim-tipo" value="Tecido" checked> Tecido
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="radio" name="boletim-tipo" value="Ferramenta"> Ferramenta
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="radio" name="boletim-tipo" value="Molde"> Molde
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="radio" name="boletim-tipo" value="Outro"> Outro:
+                                    </label>
+                                    <input type="text" id="boletim-tipo-outro-texto" style="flex-grow:1;" placeholder="especifique se Outro">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label for="boletim-plano-codigo">Código do Plano:</label>
+                                <input type="text" id="boletim-plano-codigo" placeholder="ex: PLAN-501">
+                            </div>
+                            <div class="form-group-boletim">
+                                <label for="boletim-origem">Almoxarifado de origem:</label>
+                                <input type="text" id="boletim-origem" placeholder="ex: Lab 1">
+                            </div>
+                        </div>
+
+                        <div class="boletim-section-title">2. Descrição da Ocorrência</div>
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <textarea id="boletim-descricao" placeholder="Descreva os detalhes da ocorrência (ex: quebra, avaria, roubo ou descarte indevido do material)..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="boletim-section-title">3. Situação Identificada</div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-situacao" value="Material faltando"> Material faltando
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-situacao" value="Material danificado"> Material danificado
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-situacao" value="Quantidade divergente"> Quantidade divergente
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-situacao" value="Não devolvido"> Não devolvido
+                            </label>
+                            <label class="checkbox-label" style="display:flex; align-items:center; gap:5px; width:100%;">
+                                <input type="checkbox" name="boletim-situacao" value="Outro" id="boletim-sit-outro-check"> Outro:
+                                <input type="text" id="boletim-situacao-outro" style="flex-grow:1;" placeholder="especifique">
+                            </label>
+                        </div>
+
+                        <div class="boletim-section-title">4. Quantidade</div>
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label for="boletim-qtd-prevista">Qtd. Prevista:</label>
+                                <input type="text" id="boletim-qtd-prevista" placeholder="0">
+                            </div>
+                            <div class="form-group-boletim">
+                                <label for="boletim-qtd-encontrada">Qtd. Encontrada:</label>
+                                <input type="text" id="boletim-qtd-encontrada" placeholder="0">
+                            </div>
+                            <div class="form-group-boletim">
+                                <label for="boletim-qtd-diferenca">Diferença:</label>
+                                <input type="text" id="boletim-qtd-diferenca" placeholder="0" readonly>
+                            </div>
+                        </div>
+
+                        <div class="boletim-section-title">5. Responsáveis (Se Identificado)</div>
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label for="boletim-aluno">Nome do aluno/grupo:</label>
+                                <input type="text" id="boletim-aluno" placeholder="Nome dos alunos envolvidos">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <label for="boletim-obs">Observação:</label>
+                                <input type="text" id="boletim-obs" placeholder="Algum outro detalhe importante...">
+                            </div>
+                        </div>
+
+                        <div class="boletim-section-title">6. Medidas Adotadas</div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-medidas" value="Comunicação ao professor"> Comunicação ao professor
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-medidas" value="Registro em controle"> Registro em controle
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-medidas" value="Reposição solicitada"> Reposição solicitada
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="boletim-medidas" value="Orientação aos alunos"> Orientação aos alunos
+                            </label>
+                            <label class="checkbox-label" style="display:flex; align-items:center; gap:5px; width:100%;">
+                                <input type="checkbox" name="boletim-medidas" value="Outro" id="boletim-medida-outro-check"> Outro:
+                                <input type="text" id="boletim-medida-outro" style="flex-grow:1;" placeholder="especifique">
+                            </label>
+                        </div>
+
+                        <div class="boletim-section-title">7. Observações Gerais</div>
+                        <div class="form-row">
+                            <div class="form-group-boletim">
+                                <textarea id="boletim-obs-gerais" placeholder="Insira quaisquer outras observações relevantes..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="signatures-section">
+                            <div>
+                                <div class="signature-line">Responsável pelo Registro</div>
+                            </div>
+                            <div>
+                                <div class="signature-line">Professor</div>
+                            </div>
+                            <div>
+                                <div class="signature-line">Coordenação</div>
+                            </div>
+                        </div>
+
+                        <div class="boletim-actions">
+                            <button type="submit" class="btn-submit-boletim">Enviar Relatório</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 5. CADASTRO SECTION -->
+            <section id="cadastro" class="view-section">
+                <div class="cadastro-page-container">
+                    <div class="cadastro-header">
+                        <h1>CADASTRO</h1>
+                    </div>
+                    
+                    <form id="cadastro-form" class="cadastro-form-overlay">
+                        <!-- Email Field (Long Pill) -->
+                        <div class="cadastro-form-group">
+                            <input type="email" id="cad-email" class="cadastro-input-pill" placeholder="Email:" required>
+                        </div>
+                        
+                        <!-- Name Field (Medium Pill) -->
+                        <div class="cadastro-form-group medium">
+                            <input type="text" id="cad-nome" class="cadastro-input-pill" placeholder="Nome:" required>
+                        </div>
+                        
+                        <!-- Password Field (Short Pill) -->
+                        <div class="cadastro-form-group short">
+                            <input type="password" id="cad-senha" class="cadastro-input-pill" placeholder="Senha:" required>
+                            <div class="cadastro-subtext">
+                                X mínimo de 8 caracteres<br>
+                                X letras maiúsculas, minúsculas e número.
+                            </div>
+                        </div>
+
+                        <!-- Actions Row -->
+                        <div class="cadastro-actions">
+                            <button type="submit" class="btn-cadastro-submit">CADASTRAR</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 6. GUIA DE ORGANIZAÇÃO SECTION -->
+            <section id="guia-organizacao" class="view-section">
+                <div class="content-container">
+                    <h2 class="section-title">Guia de Organização do Laboratório</h2>
+                    
+                    <div class="guia-grid">
+                        <div class="guia-card">
+                            <h3>1. Agulhas e Alfinetes</h3>
+                            <ul class="guia-list">
+                                <li>Nunca deixe agulhas soltas nas bancadas.</li>
+                                <li>Guarde agulhas sobressalentes na embalagem original ou em alfineteiros magnéticos.</li>
+                                <li>Descarte agulhas tortas ou cegas em coletores de materiais perfurocortantes.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="guia-card">
+                            <h3>2. Máquinas de Costura</h3>
+                            <ul class="guia-list">
+                                <li>Desligue a máquina no interruptor geral ao terminar o trabalho.</li>
+                                <li>Limpe a caixa da bobina de fiapos e resíduos de fios diariamente.</li>
+                                <li>Cubra a máquina com a capa protetora ao final da aula.</li>
+                            </ul>
+                        </div>
+
+                        <div class="guia-card">
+                            <h3>3. Moldes e Papéis</h3>
+                            <ul class="guia-list">
+                                <li>Guarde moldes de papel kraft pendurados nos cabides apropriados.</li>
+                                <li>Identifique cada peça do molde com o nome da modelagem, tamanho e número de cortes.</li>
+                                <li>Enrole sobras reutilizáveis de papel e armazene na prateleira inferior.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Visual Guidelines Certo vs Errado -->
+                    <div class="certo-errado-section">
+                        <h3 class="section-title" style="font-size:1.3rem; margin-bottom:20px;">DIRETRIZES VISUAIS (5S)</h3>
+                        <div class="certo-errado-grid">
+                            <div class="visual-column certo">
+                                <h4>✓ ORGANIZADO (Certo)</h4>
+                                <div class="visual-placeholder"></div>
+                            </div>
+                            <div class="visual-column errado">
+                                <h4>✗ DESORGANIZADO (Errado)</h4>
+                                <div class="visual-placeholder"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. NOTIFICAÇÕES SECTION -->
+            <section id="notificacao" class="view-section">
+                <div class="notif-container">
+                    <h2 class="section-title">Central de Notificações</h2>
+                    
+                    <div class="notif-filters">
+                        <button class="btn-filter active" onclick="filterNotifications('all')">Todas</button>
+                        <button class="btn-filter" onclick="filterNotifications('unread')">Não lidas</button>
+                        <button class="btn-filter" onclick="filterNotifications('read')">Lidas</button>
+                    </div>
+
+                    <div class="notif-list" id="notifications-list-container">
+                        <!-- Dynamically populated by app.js -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. PLANO DE AULA SECTION -->
+            <section id="plano-aula" class="view-section">
+                <div class="content-container">
+                    <div class="plano-top-bar">
+                        <h2 class="section-title">Gerenciador de Planos de Aula</h2>
+                        <button class="btn-new-plano" onclick="openNewPlanoModal()">+ Novo Plano</button>
+                    </div>
+
+                    <div class="plano-table-container">
+                        <table class="plano-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Curso / Turma</th>
+                                    <th>Tema da Aula</th>
+                                    <th>Objetivos</th>
+                                    <th>Recursos Necessários</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plano-aula-table-body">
+                                <!-- Loaded dynamically by app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer Section -->
+            <footer class="senaivest-footer">
+                <div class="footer-top">
+                    <div class="footer-brand-col">
+                        <h3>SENAIVEST</h3>
+                        <p>O futuro da indústria têxtil começa aqui. Plataforma integrada para gestão de laboratórios de moda, modelagem e costura industrial do SENAI.</p>
+                        <div class="social-icons">
+                            <span class="social-btn">f</span>
+                            <span class="social-btn">i</span>
+                            <span class="social-btn">y</span>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-col">
+                        <h4>Serviços</h4>
+                        <ul class="footer-links">
+                            <li><a onclick="switchTab('cadastro')">Cadastre-se</a></li>
+                            <li><a href="#">Cartão presente</a></li>
+                            <li><a href="#">Mapa do site</a></li>
+                            <li><a onclick="switchTab('almoxarifado')">Guia de produtos</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4>Suporte</h4>
+                        <ul class="footer-links">
+                            <li><a href="#">Black Friday</a></li>
+                            <li><a href="#">Acompanhe seu pedido</a></li>
+                            <li><a href="#">Ajuda</a></li>
+                            <li><a href="#">Sobre a Flash Step</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4>Redes Sociais</h4>
+                        <ul class="footer-links">
+                            <li><a href="#">Instagram</a></li>
+                            <li><a href="#">Facebook</a></li>
+                            <li><a href="#">YouTube</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <p>&copy; 2026 SENAIVEST. Todos os direitos reservados. Flash Step Comércio de Calçados Esportivos Ltda – CNPJ: 12.345.678/0001-99. Avenida Miguel Rosa, 2.100 – Galpão 05 - Bairro Parque das Palmeiras (Fictício) – CEP 64000-130 Teresina - PI</p>
+                    <div class="footer-bottom-links">
+                        <a href="#">Brasil</a>
+                        <a href="#">Política de Privacidade</a>
+                        <a href="#">Política de cookies</a>
+                        <a href="#">Termo de uso</a>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- DIALOG MODAL: ADD PRODUCT TO ALMOXARIFADO -->
+    <div class="modal-overlay" id="modal-add-product">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modal-add-product-title">Cadastrar Novo Item no Lab 1</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-add-product')">&times;</button>
+            </div>
+            <form id="form-add-product">
+                <div class="modal-body">
+                    <input type="hidden" id="add-product-lab-id" value="1">
+                    
+                    <div class="form-group">
+                        <label for="prod-nome">Nome do Produto</label>
+                        <input type="text" id="prod-nome" class="form-control" placeholder="Ex: Tesoura de Costura 17,8cm" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="prod-categoria">Categoria</label>
+                        <select id="prod-categoria" class="form-control" required>
+                            <option value="ferramentas">Ferramenta</option>
+                            <option value="tecidos">Tecido</option>
+                            <option value="moldes">Molde</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prod-quantidade">Quantidade</label>
+                        <input type="text" id="prod-quantidade" class="form-control" placeholder="Ex: 25x ou 8 rolos" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prod-localizacao">Localização (Estante/Prateleira)</label>
+                        <input type="text" id="prod-localizacao" class="form-control" placeholder="Ex: Prateleira 1A" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prod-responsavel">Responsável pela Entrada</label>
+                        <input type="text" id="prod-responsavel" class="form-control" placeholder="Ex: Prof. Carlos" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prod-status">Situação de Pertença</label>
+                        <select id="prod-status" class="form-control" required>
+                            <option value="Pertencente">Pertencente</option>
+                            <option value="Não Pertencente">Não Pertencente</option>
+                            <option value="Não apresenta no estoque">Não apresenta no estoque (Indisponível)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-add-product')">Cancelar</button>
+                    <button type="submit" class="btn-modal-submit">Adicionar Produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: CREATE LESSON PLAN -->
+    <div class="modal-overlay" id="modal-add-plano">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Criar Novo Plano de Aula</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-add-plano')">&times;</button>
+            </div>
+            <form id="form-add-plano">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="plano-data-input">Data da Aula</label>
+                        <input type="date" id="plano-data-input" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="plano-curso-input">Curso / Turma</label>
+                        <input type="text" id="plano-curso-input" class="form-control" placeholder="Ex: Aprendizagem em Processos de Costura B" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="plano-tema-input">Tema da Aula</label>
+                        <input type="text" id="plano-tema-input" class="form-control" placeholder="Ex: Modelagem e Corte de Saia Evasê" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="plano-objetivos-input">Objetivos da Aula</label>
+                        <textarea id="plano-objetivos-input" class="form-control" style="height:80px;" placeholder="Descreva os objetivos educacionais..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ficha de Controle - Adicionar Materiais Necessários</label>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <select id="plano-material-select" class="form-control" style="flex-grow:1;">
+                                <!-- Populated dynamically by app.js with inventory items -->
+                            </select>
+                            <button type="button" class="btn-modal-submit" onclick="addMaterialToPlanoForm()" style="white-space:nowrap; padding: 12px 20px;">+ Adicionar</button>
+                        </div>
+                        
+                        <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
+                            <table class="plano-table" style="font-size: 0.85rem; width:100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Material</th>
+                                        <th>Almoxarifado</th>
+                                        <th style="width: 80px;">Qtd</th>
+                                        <th style="width: 50px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="plano-form-recursos-body">
+                                    <!-- Dynamically added rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-add-plano')">Cancelar</button>
+                    <button type="submit" class="btn-modal-submit">Salvar Plano</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: TRANSFER PRODUCT BETWEEN ALMOXARIFADOS -->
+    <div class="modal-overlay" id="modal-transfer-product">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Transferir Material</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-transfer-product')">&times;</button>
+            </div>
+            <form id="form-transfer-product">
+                <div class="modal-body">
+                    <input type="hidden" id="trans-product-id">
+                    
+                    <div class="form-group">
+                        <label>Material a ser transferido</label>
+                        <input type="text" id="trans-product-nome" class="form-control" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="trans-professor">Professor Solicitante</label>
+                        <select id="trans-professor" class="form-control" required>
+                            <option value="Prof(a). Carol">Prof(a). Carol</option>
+                            <option value="Prof. Carlos">Prof. Carlos</option>
+                            <option value="Prof(a). Emanuela">Prof(a). Emanuela</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="trans-destino">Almoxarifado de Destino</label>
+                        <select id="trans-destino" class="form-control" required>
+                            <option value="1">Almoxarifado Lab 1</option>
+                            <option value="2">Almoxarifado Lab 2</option>
+                            <option value="3">Almoxarifado Lab 3</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="trans-quantidade">Quantidade a Transferir</label>
+                        <input type="text" id="trans-quantidade" class="form-control" placeholder="Ex: 5x ou Tudo" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-transfer-product')">Cancelar</button>
+                    <button type="submit" class="btn-modal-submit">Registrar Transferência</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: VIEW LESSON PLAN DETAILS & MATERIAL CONTROL SHEET -->
+    <div class="modal-overlay" id="modal-view-plano-detalhes">
+        <div class="modal-box" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 id="view-plano-titulo">Ficha de Controle - Plano de Aula</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-view-plano-detalhes')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; line-height: 1.8; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
+                    <div><strong>Curso / Turma:</strong> <span id="view-plano-curso"></span></div>
+                    <div><strong>Tema da Aula:</strong> <span id="view-plano-tema"></span></div>
+                    <div><strong>Data da Aula:</strong> <span id="view-plano-data"></span></div>
+                    <div style="margin-top:10px;"><strong>Objetivos:</strong></div>
+                    <p id="view-plano-objetivos" style="color:var(--text-muted); font-size:0.9rem; padding: 12px; background:var(--bg-dark); border-radius:6px; margin-top:5px; border:1px solid var(--border-color);"></p>
+                </div>
+                
+                <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px; text-transform:uppercase; color:var(--primary-beige); letter-spacing:0.5px;">Ficha de Controle de Materiais</h3>
+                <div style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden;">
+                    <table class="plano-table" style="font-size: 0.9rem; width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Almoxarifado</th>
+                                <th style="width: 150px;">Qtd. Reservada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="view-plano-recursos-body">
+                            <!-- Loaded dynamically by app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-view-plano-detalhes')">Fechar Ficha</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
