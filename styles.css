@@ -2719,3 +2719,51 @@ html, body {
     background-color: var(--primary-beige);
     color: var(--bg-dark);
 }
+
+/* PROFILE DETAILS LAYOUT */
+.profile-details-display div {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    width: 100%;
+}
+.profile-details-display div strong {
+    font-size: 0.82rem;
+    color: var(--primary-beige);
+}
+.profile-details-display div span {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+/* TYPING INDICATOR FOR ESTELA CHATBOT */
+.typing-indicator .msg-bubble {
+    background-color: var(--bg-card-light);
+    border-left: 3px solid var(--accent-green);
+    border-bottom-left-radius: 2px;
+}
+.typing-indicator .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: var(--text-muted);
+    border-radius: 50%;
+    margin-right: 3px;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-indicator .dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+.typing-indicator .dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1.0); }
+}

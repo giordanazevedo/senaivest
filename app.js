@@ -305,9 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
         regOverlay.style.display = 'none';
         const user = JSON.parse(registeredUser);
         updateUserUI(user);
-        if (user.customAvatar) {
-            updateFormChoices(user.customAvatar);
-        }
     }
 
     // Handle Forced Registration Form
@@ -333,14 +330,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const newUser = {
                 name: nome,
                 email: email,
-                role: 'Administrador(a)',
-                avatarType: 'custom',
-                customAvatar: {
-                    bgColor: '#2c3e50',
-                    hair: 'ondulado',
-                    eyes: 'classico',
-                    mouth: 'amigavel'
-                }
+                role: 'Docente',
+                phone: '',
+                address: '',
+                responsibleClass: '',
+                avatarType: 'default',
+                avatarData: ''
             };
 
             localStorage.setItem('registeredUser', JSON.stringify(newUser));
@@ -362,27 +357,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Set up live preview change events for avatar editor
-    const customizationForm = document.getElementById('avatar-customize-form');
-    if (customizationForm) {
-        customizationForm.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                updateLivePreview();
-            });
-        });
-
-        // Handle avatar customizer form submission
-        customizationForm.addEventListener('submit', (e) => {
+    // Handle Profile Details Form Submission
+    const profileDetailsForm = document.getElementById('profile-details-form');
+    if (profileDetailsForm) {
+        profileDetailsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const registeredUser = localStorage.getItem('registeredUser');
             if (registeredUser) {
                 const user = JSON.parse(registeredUser);
-                user.avatarType = 'custom';
-                user.customAvatar = getFormAvatarData();
-                localStorage.setItem('registeredUser', JSON.stringify(user));
-                updateUserUI(user);
+                user.name = document.getElementById('profile-name').value.trim();
+                user.phone = document.getElementById('profile-phone').value.trim();
+                user.email = document.getElementById('profile-email').value.trim();
+                user.address = document.getElementById('profile-address').value.trim();
+                user.role = document.getElementById('profile-role').value.trim();
+                user.responsibleClass = document.getElementById('profile-class').value.trim();
                 
-                showToast('Avatar personalizado salvo!', 'success');
+                localStorage.setItem('registeredUser', JSON.stringify(user));
+                
+                // Save Gemini Key
+                const geminiKey = document.getElementById('profile-gemini-key').value.trim();
+                if (geminiKey) {
+                    localStorage.setItem('gemini_api_key', geminiKey);
+                } else {
+                    localStorage.removeItem('gemini_api_key');
+                }
+                
+                updateUserUI(user);
+                showToast('Informações do perfil atualizadas!', 'success');
             }
         });
     }
@@ -454,13 +455,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const registeredUser = localStorage.getItem('registeredUser');
             if (registeredUser) {
                 const user = JSON.parse(registeredUser);
-                user.avatarType = 'custom';
+                user.avatarType = 'default';
                 user.avatarData = '';
                 localStorage.setItem('registeredUser', JSON.stringify(user));
                 
                 updateUserUI(user);
-                updateFormChoices(user.customAvatar);
-                showToast('Foto personalizada removida. Avatar restaurado.', 'success');
+                showToast('Foto removida. Silhueta restaurada.', 'success');
             }
         });
     }
@@ -1251,71 +1251,14 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// --- USER SESSION AND AVATAR CUSTOMIZER BEHAVIORS ---
+// --- USER SESSION AND PROFILE BEHAVIORS ---
 
-// Generate custom SVG string for avatar based on choices
-function generateAvatarSVG(custom) {
-    const bgColor = custom.bgColor || '#2c3e50';
-    const hair = custom.hair || 'ondulado';
-    const eyes = custom.eyes || 'classico';
-    const mouth = custom.mouth || 'amigavel';
-    const skinColor = '#fed5b2';
-
-    let hairSvg = '';
-    if (hair === 'ondulado') {
-        hairSvg = `<path d="M30 40c-2-8 3-15 15-18c15-4 22 5 24 12c1 3 0 10-2 12c-2-3-5-2-7-5c-2 6-8 7-11 4c-3 5-8 5-11 0c-2 4-5 3-8-5z" fill="#3e2723"/>`;
-    } else if (hair === 'curto') {
-        hairSvg = `<path d="M32 38c0-8 6-12 18-12s18 4 18 12c0-3-4-5-8-5c-4 0-6 2-10 2s-6-2-10-2c-4 0-8 2-8 5z" fill="#2c3e50"/>`;
-    } else if (hair === 'preso') {
-        hairSvg = `
-            <circle cx="50" cy="22" r="7" fill="#d35400"/>
-            <path d="M32 40c0-10 8-15 18-15s18 5 18 15c-3-5-8-6-18-6s-15 1-18 6z" fill="#d35400"/>
-        `;
-    } else if (hair === 'bone') {
-        hairSvg = `
-            <path d="M30 35c3-10 12-11 20-11s17 1 20 11H30z" fill="#005CA9"/>
-            <path d="M45 35c10-2 20 0 25 3c5 3 2 4-5 4H45z" fill="#002d62"/>
-        `;
-    }
-
-    let eyesSvg = '';
-    if (eyes === 'alegre') {
-        eyesSvg = `<path d="M41 43c1-2 4-2 5 0M54 43c1-2 4-2 5 0" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>`;
-    } else if (eyes === 'escuros') {
-        eyesSvg = `
-            <path d="M36 41h28v4c0 3-3 6-6 6h-2c-2 0-4-2-4-4c0 2-2 4-4 4h-2c-3 0-6-3-6-6v-4z" fill="#111"/>
-            <path d="M36 41h28" stroke="#111" stroke-width="2"/>
-        `;
-    } else if (eyes === 'grau') {
-        eyesSvg = `
-            <circle cx="43" cy="44" r="5" stroke="#d3bca2" stroke-width="2" fill="none"/>
-            <circle cx="57" cy="44" r="5" stroke="#d3bca2" stroke-width="2" fill="none"/>
-            <line x1="48" y1="44" x2="52" y2="44" stroke="#d3bca2" stroke-width="2"/>
-            <path d="M42 44h2M56 44h2" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
-        `;
-    } else if (eyes === 'classico') {
-        eyesSvg = `
-            <circle cx="43" cy="44" r="2" fill="#000"/>
-            <circle cx="57" cy="44" r="2" fill="#000"/>
-        `;
-    }
-
-    let mouthSvg = '';
-    if (mouth === 'aberto') {
-        mouthSvg = `<path d="M42 52c0 5 4 8 8 8s8-3 8-8H42z" fill="#c0392b"/>`;
-    } else if (mouth === 'amigavel') {
-        mouthSvg = `<path d="M44 53q6 4 12 0" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>`;
-    } else if (mouth === 'neutro') {
-        mouthSvg = `<line x1="44" y1="54" x2="56" y2="54" stroke="#000" stroke-width="2" stroke-linecap="round"/>`;
-    }
-
+// Generate default silhouette SVG string for avatar
+function generateDefaultAvatarSVG() {
     return `
-        <svg class="profile-img" viewBox="0 0 100 100" style="background:${bgColor}; display:block; width:100%; height:100%;">
-            <circle cx="50" cy="46" r="18" fill="${skinColor}"/>
-            <path d="M20 90c0-15 12-25 30-25s30 10 30 25v10H20z" fill="#34495e"/>
-            ${hairSvg}
-            ${eyesSvg}
-            ${mouthSvg}
+        <svg class="profile-img" viewBox="0 0 100 100" style="background:#2c3e50; display:block; width:100%; height:100%;">
+            <circle cx="50" cy="35" r="20" fill="#ecf0f1"/>
+            <path d="M20 80c0-20 15-30 30-30s30 10 30 30H20z" fill="#ecf0f1"/>
         </svg>
     `;
 }
@@ -1330,13 +1273,7 @@ function updateUserAvatar(user) {
     if (user.avatarType === 'uploaded' && user.avatarData) {
         avatarHtml = `<img src="${user.avatarData}" class="profile-img" alt="Avatar">`;
     } else {
-        const custom = user.customAvatar || {
-            bgColor: '#2c3e50',
-            hair: 'ondulado',
-            eyes: 'classico',
-            mouth: 'amigavel'
-        };
-        avatarHtml = generateAvatarSVG(custom);
+        avatarHtml = generateDefaultAvatarSVG();
     }
 
     if (sidebarAvatarContainer) sidebarAvatarContainer.innerHTML = avatarHtml;
@@ -1350,19 +1287,53 @@ function updateUserAvatar(user) {
     if (profileAvatarContainer) profileAvatarContainer.innerHTML = avatarHtml;
 }
 
-// Update text details and avatar
+// Update text details, displays, forms and avatar
 function updateUserUI(user) {
     const sideName = document.getElementById('sidebar-profile-name');
     const headName = document.getElementById('header-user-name');
     const sideRole = document.getElementById('sidebar-profile-role');
+    
     const profileNameDisplay = document.getElementById('profile-user-name-display');
     const profileEmailDisplay = document.getElementById('profile-user-email-display');
+    const profileBadgeDisplay = document.getElementById('profile-user-badge-display');
 
-    if (sideName) sideName.textContent = user.name;
-    if (headName) headName.textContent = user.name;
-    if (sideRole) sideRole.textContent = user.role || 'Administrador(a)';
-    if (profileNameDisplay) profileNameDisplay.textContent = user.name;
-    if (profileEmailDisplay) profileEmailDisplay.textContent = user.email;
+    // Display elements
+    const displayPhone = document.getElementById('display-user-phone');
+    const displayAddress = document.getElementById('display-user-address');
+    const displayRole = document.getElementById('display-user-role');
+    const displayClass = document.getElementById('display-user-class');
+
+    // Form inputs
+    const inputName = document.getElementById('profile-name');
+    const inputPhone = document.getElementById('profile-phone');
+    const inputEmail = document.getElementById('profile-email');
+    const inputAddress = document.getElementById('profile-address');
+    const inputRole = document.getElementById('profile-role');
+    const inputClass = document.getElementById('profile-class');
+    const inputGeminiKey = document.getElementById('profile-gemini-key');
+
+    // Set Text Contents
+    if (sideName) sideName.textContent = user.name || 'Usuário';
+    if (headName) headName.textContent = user.name ? user.name.split(' ')[0] : 'Usuário';
+    if (sideRole) sideRole.textContent = user.role || 'Docente';
+    
+    if (profileNameDisplay) profileNameDisplay.textContent = user.name || 'Nome do Usuário';
+    if (profileEmailDisplay) profileEmailDisplay.textContent = user.email || 'usuario@senai.br';
+    if (profileBadgeDisplay) profileBadgeDisplay.textContent = user.role || 'Docente';
+
+    if (displayPhone) displayPhone.textContent = user.phone || 'Não informado';
+    if (displayAddress) displayAddress.textContent = user.address || 'Não informado';
+    if (displayRole) displayRole.textContent = user.role || 'Não informado';
+    if (displayClass) displayClass.textContent = user.responsibleClass || 'Nenhuma';
+
+    // Set Form Values
+    if (inputName) inputName.value = user.name || '';
+    if (inputPhone) inputPhone.value = user.phone || '';
+    if (inputEmail) inputEmail.value = user.email || '';
+    if (inputAddress) inputAddress.value = user.address || '';
+    if (inputRole) inputRole.value = user.role || '';
+    if (inputClass) inputClass.value = user.responsibleClass || '';
+    if (inputGeminiKey) inputGeminiKey.value = localStorage.getItem('gemini_api_key') || '';
 
     const btnResetAvatar = document.getElementById('btn-reset-avatar');
     if (btnResetAvatar) {
@@ -1370,40 +1341,6 @@ function updateUserUI(user) {
     }
 
     updateUserAvatar(user);
-}
-
-// Select correct radio buttons on load
-function updateFormChoices(custom) {
-    if (!custom) return;
-    
-    const bgInput = document.querySelector(`input[name="avatar-bg"][value="${custom.bgColor}"]`);
-    const hairInput = document.querySelector(`input[name="avatar-hair"][value="${custom.hair}"]`);
-    const eyesInput = document.querySelector(`input[name="avatar-eyes"][value="${custom.eyes}"]`);
-    const mouthInput = document.querySelector(`input[name="avatar-mouth"][value="${custom.mouth}"]`);
-
-    if (bgInput) bgInput.checked = true;
-    if (hairInput) hairInput.checked = true;
-    if (eyesInput) eyesInput.checked = true;
-    if (mouthInput) mouthInput.checked = true;
-}
-
-// Read current form choices
-function getFormAvatarData() {
-    const bg = document.querySelector('input[name="avatar-bg"]:checked').value;
-    const hair = document.querySelector('input[name="avatar-hair"]:checked').value;
-    const eyes = document.querySelector('input[name="avatar-eyes"]:checked').value;
-    const mouth = document.querySelector('input[name="avatar-mouth"]:checked').value;
-    return { bgColor: bg, hair, eyes, mouth };
-}
-
-// Update live preview SVG
-function updateLivePreview() {
-    const customData = getFormAvatarData();
-    const svgHtml = generateAvatarSVG(customData);
-    const container = document.getElementById('profile-preview-avatar-container');
-    if (container) {
-        container.innerHTML = svgHtml;
-    }
 }
 
 // --- ESTELA VIRTUAL ASSISTANT LOGIC ---
@@ -1427,15 +1364,77 @@ function getEstelaResponse(query) {
         return "No menu <strong>Plano de Aula</strong>, você pode criar planejamentos e associar insumos do estoque. O sistema gera um código de plano automático (`PLAN-XXX`) e cria uma Ficha de Controle de Materiais. Assim, tudo estará devidamente separado antes de iniciar as aulas!";
     }
     
-    if (q.includes('avatar') || q.includes('perfil') || q.includes('foto') || q.includes('personalizar') || q.includes('imagem') || q.includes('galeria')) {
-        return "Para ajustar sua foto ou avatar, vá no menu <strong>Perfil</strong>. Você tem duas opções: carregar uma foto real da sua galeria ou utilizar o painel interativo de personalização do avatar (onde pode mudar cor de fundo, cabelo, olhar e boca). Tudo atualiza na hora!";
+    if (q.includes('avatar') || q.includes('perfil') || q.includes('foto') || q.includes('personalizar') || q.includes('imagem') || q.includes('galeria') || q.includes('dados') || q.includes('telefone') || q.includes('cargo')) {
+        return "Para carregar sua foto da galeria ou atualizar seus dados essenciais (nome, telefone, e-mail, endereço, cargo e turma de responsabilidade), vá no menu <strong>Perfil</strong>. Lá você também pode configurar sua API Key do Google Gemini para ativar minhas respostas com inteligência artificial!";
     }
     
     if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('retalho') || q.includes('limpeza') || q.includes('organização') || q.includes('5s') || q.includes('lixo') || q.includes('coleta')) {
         return "O laboratório sustentável é o nosso forte! Na aba <strong>Guia de Organização</strong>, além das regras 5S para agulhas e máquinas, temos regras de reciclagem de tecidos (separar fibras naturais de sintéticas), descarte correto de moldes de papel kraft, encaixe inteligente e economia de energia nas máquinas industriais.";
     }
     
-    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use a aba <strong>Boletim</strong>; e para customizar seu visual use a aba <strong>Perfil</strong>. Se precisar, use um dos botões de sugestões rápidas!";
+    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use a aba <strong>Boletim</strong>; e para atualizar seus dados ou configurar a IA use a aba <strong>Perfil</strong>. Se precisar, use um dos botões de sugestões rápidas!";
+}
+
+// Google Gemini API integration
+async function getEstelaAIResponse(query) {
+    const apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) {
+        const fallback = getEstelaResponse(query);
+        return `<strong>[Estela Offline]</strong> ${fallback}<br><br><span style="font-size:0.8rem; color:var(--text-muted); display:block; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; margin-top:8px;">💡 Dica: Habilite a inteligência do Google Gemini inserindo sua API Key na aba <strong>Perfil</strong>!</span>`;
+    }
+
+    try {
+        const systemPrompt = `Você é a Estela, a assistente virtual e Especialista Têxtil da plataforma SENAIVEST (Sistema de Controle de Almoxarifado para laboratórios de moda e vestuário do SENAI).
+Seu objetivo é ajudar os professores e administradores a usarem a plataforma e tirarem dúvidas gerais de forma simpática, prestativa e profissional. Fale em português.
+
+Informações sobre a plataforma SENAIVEST:
+1. Menu/Abas:
+   - Início: Tela principal com banners de inspiração, atalhos rápidos e categorias.
+   - Aba Geral: Estatísticas do sistema (total de itens, boletins enviados, planos de aula, notificações) e gráficos de empréstimos semanais.
+   - Almoxarifado: Controle de estoque de 3 laboratórios (Lab 1, Lab 2, Lab 3). Cada um contém Ferramentas (tesouras, agulhas, réguas), Tecidos (jeans, malha, viscose) e Moldes. Permite transferir itens de um laboratório para outro.
+   - Boletim: Formulário completo para relatar avarias, perdas, materiais quebrados (gera código DOC-2026-XXX).
+   - Boletins Registrados: Pasta com todos os relatórios de ocorrências enviados.
+   - Perfil: Exibe os dados da professora (nome, e-mail, telefone, endereço, cargo, turma responsável) e permite carregar uma foto. Também permite configurar a API Key do Google Gemini para alimentar esta assistente.
+   - Guia de Organização: Regras do 5S e diretrizes ecológicas/sustentabilidade (descarte de resíduos têxteis, retalhos, etc.).
+   - Plano de Aula: Cadastro de aulas e fichas de controle de insumos.
+
+Responda de forma clara, amigável e objetiva. Use formatação HTML básica se necessário (como <strong> para negrito, listagens, etc.) para que fique fácil de ler no balão de chat.`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: `${systemPrompt}\n\nPergunta do Usuário: ${query}`
+                    }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+            let replyText = data.candidates[0].content.parts[0].text;
+            // Clean markdown syntax to raw HTML if needed
+            replyText = replyText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            replyText = replyText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            replyText = replyText.replace(/`([^`]+)`/g, '<code>$1</code>');
+            replyText = replyText.replace(/\n/g, '<br>');
+            return replyText;
+        } else {
+            throw new Error("Invalid response schema from Gemini API");
+        }
+    } catch (err) {
+        console.error("Gemini API call failed:", err);
+        const fallback = getEstelaResponse(query);
+        return `<strong>[Estela Offline - Erro de Conexão com Google AI]</strong> ${fallback}`;
+    }
 }
 
 function initEstelaChatbot() {
@@ -1472,8 +1471,30 @@ function initEstelaChatbot() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message assistant typing-indicator';
+        typingDiv.id = 'chat-typing-indicator';
+        typingDiv.innerHTML = `
+            <div class="msg-bubble" style="display:flex; align-items:center; gap:5px; padding: 10px 15px;">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+        `;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('chat-typing-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
     if (chatForm) {
-        chatForm.addEventListener('submit', (e) => {
+        chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = chatInput.value.trim();
             if (!text) return;
@@ -1481,24 +1502,26 @@ function initEstelaChatbot() {
             appendMessage(text, true);
             chatInput.value = '';
 
-            setTimeout(() => {
-                const estelaReply = getEstelaResponse(text);
-                appendMessage(estelaReply, false);
-            }, 600);
+            showTypingIndicator();
+            const reply = await getEstelaAIResponse(text);
+            removeTypingIndicator();
+
+            appendMessage(reply, false);
         });
     }
 
     if (suggestionsContainer) {
-        suggestionsContainer.addEventListener('click', (e) => {
+        suggestionsContainer.addEventListener('click', async (e) => {
             const btn = e.target.closest('.btn-suggestion');
             if (btn) {
                 const question = btn.getAttribute('data-question');
                 appendMessage(question, true);
 
-                setTimeout(() => {
-                    const estelaReply = getEstelaResponse(question);
-                    appendMessage(estelaReply, false);
-                }, 500);
+                showTypingIndicator();
+                const reply = await getEstelaAIResponse(question);
+                removeTypingIndicator();
+
+                appendMessage(reply, false);
             }
         });
     }

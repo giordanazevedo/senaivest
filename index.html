@@ -520,13 +520,7 @@
 
                         <div class="boletim-actions">
                             <button type="submit" class="btn-submit-boletim">Enviar Relatório</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
- 
-            <!-- PROFILE SECTION -->
+                     <!-- PROFILE SECTION -->
             <section id="perfil" class="view-section">
                 <div class="perfil-container">
                     <h2 class="section-title">Perfil do Usuário</h2>
@@ -536,12 +530,12 @@
                         <div class="perfil-card main-info-card">
                             <div class="avatar-preview-wrapper">
                                 <div class="profile-preview-avatar-container" id="profile-preview-avatar-container">
-                                    <!-- Dynamic Avatar rendered by JS -->
+                                    <!-- Silhouette or uploaded photo dynamic render -->
                                 </div>
                             </div>
                             <h3 class="perfil-user-name" id="profile-user-name-display">Nome do Usuário</h3>
                             <p class="perfil-user-email" id="profile-user-email-display">usuario@senai.br</p>
-                            <span class="perfil-user-badge">Docente / Administrador</span>
+                            <span class="perfil-user-badge" id="profile-user-badge-display">Docente</span>
 
                             <div class="upload-area" id="avatar-upload-area">
                                 <span class="upload-icon">📷</span>
@@ -552,133 +546,57 @@
                             </div>
                             
                             <button type="button" class="btn-reset-avatar" id="btn-reset-avatar" style="display:none;">Remover Foto Personalizada</button>
+
+                            <!-- Profile Details Display on Left Side -->
+                            <div class="profile-details-display" style="width: 100%; text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; font-size: 0.9rem; line-height: 1.6;">
+                                <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Telefone:</strong> <span id="display-user-phone">-</span></div>
+                                <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Endereço:</strong> <span id="display-user-address">-</span></div>
+                                <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Cargo:</strong> <span id="display-user-role">-</span></div>
+                                <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Turma Responsável:</strong> <span id="display-user-class">-</span></div>
+                            </div>
                         </div>
 
-                        <!-- Right Column: Interactive Custom Avatar Maker -->
-                        <div class="perfil-card avatar-editor-card">
-                            <h3 class="editor-section-title">Personalizar Avatar</h3>
-                            <p class="editor-section-subtitle">Monte seu avatar exclusivo selecionando os estilos abaixo:</p>
+                        <!-- Right Column: Interactive Profile Details Form -->
+                        <div class="perfil-card profile-details-card">
+                            <h3 class="editor-section-title">Dados do Perfil</h3>
+                            <p class="editor-section-subtitle">Mantenha seus dados essenciais atualizados para o sistema:</p>
                             
-                            <form id="avatar-customize-form">
-                                <!-- Background Color Swatches -->
-                                <div class="editor-group">
-                                    <label class="editor-label">Cor de Fundo</label>
-                                    <div class="swatches-grid">
-                                        <label class="swatch-label" style="background-color: #2c3e50;">
-                                            <input type="radio" name="avatar-bg" value="#2c3e50" checked>
-                                            <span class="swatch-check"></span>
-                                        </label>
-                                        <label class="swatch-label" style="background-color: #005CA9;">
-                                            <input type="radio" name="avatar-bg" value="#005CA9">
-                                            <span class="swatch-check"></span>
-                                        </label>
-                                        <label class="swatch-label" style="background-color: #1abc9c;">
-                                            <input type="radio" name="avatar-bg" value="#1abc9c">
-                                            <span class="swatch-check"></span>
-                                        </label>
-                                        <label class="swatch-label" style="background-color: #e74c3c;">
-                                            <input type="radio" name="avatar-bg" value="#e74c3c">
-                                            <span class="swatch-check"></span>
-                                        </label>
-                                        <label class="swatch-label" style="background-color: #8e44ad;">
-                                            <input type="radio" name="avatar-bg" value="#8e44ad">
-                                            <span class="swatch-check"></span>
-                                        </label>
-                                        <label class="swatch-label" style="background-color: #d3bca2;">
-                                            <input type="radio" name="avatar-bg" value="#d3bca2">
-                                            <span class="swatch-check"></span>
-                                        </label>
+                            <form id="profile-details-form">
+                                <div class="form-group-reg">
+                                    <label for="profile-name">Nome Completo</label>
+                                    <input type="text" id="profile-name" class="form-control-reg" required>
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="profile-phone">Telefone / WhatsApp</label>
+                                    <input type="text" id="profile-phone" class="form-control-reg" placeholder="Ex: (11) 99999-9999">
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="profile-email">E-mail Corporativo</label>
+                                    <input type="email" id="profile-email" class="form-control-reg" required>
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="profile-address">Endereço</label>
+                                    <input type="text" id="profile-address" class="form-control-reg" placeholder="Rua, número, bairro, cidade">
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="profile-role">Cargo / Função</label>
+                                    <input type="text" id="profile-role" class="form-control-reg" placeholder="Ex: Professora de Modelagem, Coordenadora, etc.">
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="profile-class">Turma(s) sob sua Responsabilidade</label>
+                                    <input type="text" id="profile-class" class="form-control-reg" placeholder="Ex: Costura Industrial A, Modelagem de Vestuário B">
+                                </div>
+
+                                <!-- Gemini API Key configuration field -->
+                                <div class="form-group-reg" style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                                    <label for="profile-gemini-key" style="color: var(--accent-green);">Chave de API do Google Gemini (IA)</label>
+                                    <input type="password" id="profile-gemini-key" class="form-control-reg" placeholder="Cole sua API Key do Google AI Studio">
+                                    <div class="cadastro-subtext-reg" style="color: var(--text-muted);">
+                                        * Insira uma chave de API para que o Chatbot do assistente virtual responda suas dúvidas de forma automática e inteligente. Caso deixe em branco, o chatbot funcionará no modo offline padrão.
                                     </div>
                                 </div>
 
-                                <!-- Hair Selection -->
-                                <div class="editor-group">
-                                    <label class="editor-label">Cabelo e Estilo</label>
-                                    <div class="options-grid">
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-hair" value="ondulado" checked>
-                                            <div class="option-content">
-                                                <span class="option-title">Ondulado (Carol)</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-hair" value="curto">
-                                            <div class="option-content">
-                                                <span class="option-title">Curto (Carlos)</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-hair" value="preso">
-                                            <div class="option-content">
-                                                <span class="option-title">Preso (Emanuela)</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-hair" value="bone">
-                                            <div class="option-content">
-                                                <span class="option-title">Boné Têxtil</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- Eyes Selection -->
-                                <div class="editor-group">
-                                    <label class="editor-label">Olhar</label>
-                                    <div class="options-grid">
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-eyes" value="classico" checked>
-                                            <div class="option-content">
-                                                <span class="option-title">Clássico</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-eyes" value="alegre">
-                                            <div class="option-content">
-                                                <span class="option-title">Alegre</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-eyes" value="grau">
-                                            <div class="option-content">
-                                                <span class="option-title">Óculos de Grau</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-eyes" value="escuros">
-                                            <div class="option-content">
-                                                <span class="option-title">Óculos Escuros</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- Mouth Selection -->
-                                <div class="editor-group">
-                                    <label class="editor-label">Expressão (Boca)</label>
-                                    <div class="options-grid">
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-mouth" value="amigavel" checked>
-                                            <div class="option-content">
-                                                <span class="option-title">Sorriso Amigável</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-mouth" value="aberto">
-                                            <div class="option-content">
-                                                <span class="option-title">Sorriso Aberto</span>
-                                            </div>
-                                        </label>
-                                        <label class="option-card">
-                                            <input type="radio" name="avatar-mouth" value="neutro">
-                                            <div class="option-content">
-                                                <span class="option-title">Neutro</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <button type="submit" class="btn-save-avatar" id="btn-save-avatar">Salvar Personalização</button>
+                                <button type="submit" class="btn-save-avatar" id="btn-save-profile">Salvar Informações</button>
                             </form>
                         </div>
                     </div>
