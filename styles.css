@@ -2767,3 +2767,108 @@ html, body {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1.0); }
 }
+
+/* AUTH TOGGLE & ACCESSIBILITY VOICE STYLING */
+.auth-toggle-text {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.auth-toggle-text a {
+    color: var(--primary-beige);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+}
+.auth-toggle-text a:hover {
+    color: var(--primary-beige-hover);
+    text-decoration: underline;
+}
+
+.chat-audio-btn {
+    border-radius: 4px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+.chat-audio-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-white);
+}
+.chat-audio-btn.active {
+    color: var(--accent-green) !important;
+}
+
+#assistant-mic-btn {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition-smooth);
+}
+#assistant-mic-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-white);
+}
+#assistant-mic-btn.recording {
+    color: var(--accent-red) !important;
+    background-color: rgba(192, 57, 43, 0.15) !important;
+    animation: micPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes micPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.5); }
+    70% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(192, 57, 43, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); }
+}
+
+/* 2-Column Certo/Errado grid */
+.certo-errado-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+.visual-column {
+    display: flex;
+    flex-direction: column;
+}
+.visual-column h4 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.visual-column.certo h4 {
+    color: var(--accent-green);
+}
+.visual-column.errado h4 {
+    color: var(--accent-red);
+}
+.visual-placeholder {
+    height: 300px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid var(--border-color);
+}
+.visual-column.certo .visual-placeholder {
+    border-color: var(--accent-green);
+    background-image: url('Cópia de Cópia de Flash Step/GUIA DE ORGANIZAÇÃO.png');
+}
+.visual-column.errado .visual-placeholder {
+    border-color: var(--accent-red);
+    background-image: url('Cópia de Cópia de Flash Step/BOLETIM.png');
+}

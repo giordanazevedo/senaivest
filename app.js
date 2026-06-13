@@ -183,7 +183,7 @@ let inventory = [
 ];
 
 // Mock Data for Lesson Plans
-let lessonPlans = [
+let initialLessonPlans = [
     {
         id: 1,
         date: '2026-06-15',
@@ -220,6 +220,11 @@ let lessonPlans = [
         ]
     }
 ];
+
+let lessonPlans = JSON.parse(localStorage.getItem('lessonPlans')) || initialLessonPlans;
+if (!localStorage.getItem('lessonPlans')) {
+    localStorage.setItem('lessonPlans', JSON.stringify(initialLessonPlans));
+}
 
 // Mock Data for Notifications
 let notifications = [
@@ -298,22 +303,57 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check registration state
     const regOverlay = document.getElementById('register-fullscreen-overlay');
     const registeredUser = localStorage.getItem('registeredUser');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const signupCard = document.getElementById('auth-cadastro-card');
+    const loginCard = document.getElementById('auth-login-card');
 
     if (!registeredUser) {
+        // No user registered, show signup card
         regOverlay.style.display = 'flex';
+        signupCard.style.display = 'flex';
+        loginCard.style.display = 'none';
+    } else if (isLoggedIn !== 'true') {
+        // Stored user exists but not logged in, show login card
+        regOverlay.style.display = 'flex';
+        signupCard.style.display = 'none';
+        loginCard.style.display = 'flex';
+        const user = JSON.parse(registeredUser);
+        updateUserUI(user);
     } else {
+        // Logged in
         regOverlay.style.display = 'none';
         const user = JSON.parse(registeredUser);
         updateUserUI(user);
     }
 
-    // Handle Forced Registration Form
+    // Toggle buttons between signup and login cards inside overlay
+    const goToLoginBtn = document.getElementById('go-to-login-btn');
+    if (goToLoginBtn) {
+        goToLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            signupCard.style.display = 'none';
+            loginCard.style.display = 'flex';
+        });
+    }
+
+    const goToSignupBtn = document.getElementById('go-to-signup-btn');
+    if (goToSignupBtn) {
+        goToSignupBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginCard.style.display = 'none';
+            signupCard.style.display = 'flex';
+        });
+    }
+
+    // Handle Forced Registration Form (Cadastro)
     const firstRegForm = document.getElementById('first-register-form');
     if (firstRegForm) {
         firstRegForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const nome = document.getElementById('first-reg-nome').value.trim();
             const email = document.getElementById('first-reg-email').value.trim();
+            const telefone = document.getElementById('first-reg-telefone').value.trim();
+            const nascimento = document.getElementById('first-reg-nascimento').value;
             const senha = document.getElementById('first-reg-senha').value;
 
             // Password validation
@@ -330,8 +370,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const newUser = {
                 name: nome,
                 email: email,
+                password: senha,
+                phone: telefone,
+                nascimento: nascimento,
                 role: 'Docente',
-                phone: '',
                 address: '',
                 responsibleClass: '',
                 avatarType: 'default',
@@ -341,19 +383,60 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('registeredUser', JSON.stringify(newUser));
             updateUserUI(newUser);
             
-            // Hide registration screen with animation
-            regOverlay.style.transition = 'opacity 0.5s ease-out';
-            regOverlay.style.opacity = '0';
-            setTimeout(() => {
-                regOverlay.style.display = 'none';
-            }, 500);
+            // Success notification and toggle to login view inside overlay
+            showToast('Cadastro realizado com sucesso! Faça login para entrar.', 'success');
+            signupCard.style.display = 'none';
+            loginCard.style.display = 'flex';
+        });
+    }
 
-            showToast('Cadastro realizado com sucesso!', 'success');
+    // Handle Login Form
+    const firstLoginForm = document.getElementById('first-login-form');
+    if (firstLoginForm) {
+        firstLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const senha = document.getElementById('login-senha').value;
 
-            // Redirect to Perfil
-            setTimeout(() => {
-                switchTab('perfil');
-            }, 600);
+            const storedUserStr = localStorage.getItem('registeredUser');
+            if (!storedUserStr) {
+                showToast('Nenhum usuário cadastrado no sistema!', 'error');
+                return;
+            }
+
+            const storedUser = JSON.parse(storedUserStr);
+            if (storedUser.email === email && storedUser.password === senha) {
+                localStorage.setItem('isLoggedIn', 'true');
+                updateUserUI(storedUser);
+                
+                // Hide registration overlay with animation
+                regOverlay.style.transition = 'opacity 0.5s ease-out';
+                regOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    regOverlay.style.display = 'none';
+                    regOverlay.style.opacity = '1'; // reset for next logout
+                }, 500);
+
+                showToast('Login realizado com sucesso!', 'success');
+                switchTab('inicio');
+            } else {
+                showToast('E-mail ou senha inválidos!', 'error');
+            }
+        });
+    }
+
+    // Handle Logout Sidebar Action
+    const logoutBtn = document.getElementById('btn-logout-sidebar');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.setItem('isLoggedIn', 'false');
+            
+            signupCard.style.display = 'none';
+            loginCard.style.display = 'flex';
+            regOverlay.style.display = 'flex';
+            
+            showToast('Você saiu do sistema.', 'info');
         });
     }
 
@@ -368,6 +451,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.name = document.getElementById('profile-name').value.trim();
                 user.phone = document.getElementById('profile-phone').value.trim();
                 user.email = document.getElementById('profile-email').value.trim();
+                user.nascimento = document.getElementById('profile-nascimento').value;
+                
+                const newSenha = document.getElementById('profile-senha').value;
+                // password validation if changed
+                if (newSenha && newSenha !== user.password) {
+                    const hasMinLength = newSenha.length >= 8;
+                    const hasUpper = /[A-Z]/.test(newSenha);
+                    const hasLower = /[a-z]/.test(newSenha);
+                    const hasNumber = /[0-9]/.test(newSenha);
+
+                    if (!hasMinLength || !hasUpper || !hasLower || !hasNumber) {
+                        showToast('Senha inválida! Mínimo de 8 caracteres, contendo maiúsculas, minúsculas e número.', 'error');
+                        return;
+                    }
+                    user.password = newSenha;
+                }
+
                 user.address = document.getElementById('profile-address').value.trim();
                 user.role = document.getElementById('profile-role').value.trim();
                 user.responsibleClass = document.getElementById('profile-class').value.trim();
@@ -836,6 +936,13 @@ function handleBoletimSubmit(e) {
     });
     const medidas = medidasChecked.join(', ');
 
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let currentUserEmail = 'geovana@senai.br';
+    if (registeredUserStr) {
+        const user = JSON.parse(registeredUserStr);
+        currentUserEmail = user.email || 'geovana@senai.br';
+    }
+
     const newBoletim = {
         id: registeredBoletins.length + 1,
         code: codigo,
@@ -854,7 +961,8 @@ function handleBoletimSubmit(e) {
         aluno: aluno || 'Não identificado',
         observacoes: observacoes || 'Nenhuma',
         medidas: medidas || 'Nenhuma registrada',
-        status: 'Registrado'
+        status: 'Registrado',
+        createdBy: currentUserEmail
     };
 
     registeredBoletins.push(newBoletim);
@@ -880,9 +988,9 @@ function handleBoletimSubmit(e) {
     
     updateDashboardStats();
     
-    // Redirect to registered reports tab
+    // Redirect to personal reports tab
     setTimeout(() => {
-        switchTab('boletins-registrados');
+        switchTab('minhas-denuncias');
     }, 1000);
 }
 
@@ -912,6 +1020,7 @@ function handleAddPlanoSubmit(e) {
     };
 
     lessonPlans.push(newPlano);
+    localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
     
     addActivityLog(`Novo plano cadastrado para a turma: ${course}`);
     renderLessonPlans();
@@ -966,6 +1075,7 @@ function renderLessonPlans() {
 function deleteLessonPlan(id) {
     if (confirm('Tem certeza que deseja excluir este plano de aula?')) {
         lessonPlans = lessonPlans.filter(p => p.id !== id);
+        localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
         renderLessonPlans();
         updateDashboardStats();
         showToast('Plano de aula removido.', 'success');
@@ -1302,6 +1412,9 @@ function updateUserUI(user) {
     const displayAddress = document.getElementById('display-user-address');
     const displayRole = document.getElementById('display-user-role');
     const displayClass = document.getElementById('display-user-class');
+    const displayEmailField = document.getElementById('display-user-email-field');
+    const displaySenha = document.getElementById('display-user-senha');
+    const displayNascimento = document.getElementById('display-user-nascimento');
 
     // Form inputs
     const inputName = document.getElementById('profile-name');
@@ -1310,6 +1423,8 @@ function updateUserUI(user) {
     const inputAddress = document.getElementById('profile-address');
     const inputRole = document.getElementById('profile-role');
     const inputClass = document.getElementById('profile-class');
+    const inputNascimento = document.getElementById('profile-nascimento');
+    const inputSenha = document.getElementById('profile-senha');
     const inputGeminiKey = document.getElementById('profile-gemini-key');
 
     // Set Text Contents
@@ -1325,6 +1440,20 @@ function updateUserUI(user) {
     if (displayAddress) displayAddress.textContent = user.address || 'Não informado';
     if (displayRole) displayRole.textContent = user.role || 'Não informado';
     if (displayClass) displayClass.textContent = user.responsibleClass || 'Nenhuma';
+    if (displayEmailField) displayEmailField.textContent = user.email || 'Não informado';
+    if (displaySenha) displaySenha.textContent = user.password || 'Não informado';
+    if (displayNascimento) {
+        if (user.nascimento) {
+            let dateObj = new Date(user.nascimento);
+            if (!isNaN(dateObj.getTime())) {
+                displayNascimento.textContent = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+            } else {
+                displayNascimento.textContent = user.nascimento;
+            }
+        } else {
+            displayNascimento.textContent = 'Não informado';
+        }
+    }
 
     // Set Form Values
     if (inputName) inputName.value = user.name || '';
@@ -1333,6 +1462,8 @@ function updateUserUI(user) {
     if (inputAddress) inputAddress.value = user.address || '';
     if (inputRole) inputRole.value = user.role || '';
     if (inputClass) inputClass.value = user.responsibleClass || '';
+    if (inputNascimento) inputNascimento.value = user.nascimento || '';
+    if (inputSenha) inputSenha.value = user.password || '';
     if (inputGeminiKey) inputGeminiKey.value = localStorage.getItem('gemini_api_key') || '';
 
     const btnResetAvatar = document.getElementById('btn-reset-avatar');
@@ -1445,8 +1576,110 @@ function initEstelaChatbot() {
     const chatInput = document.getElementById('assistant-chat-input');
     const chatMessages = document.getElementById('assistant-chat-messages');
     const suggestionsContainer = document.getElementById('assistant-suggestions');
+    const micBtn = document.getElementById('assistant-mic-btn');
+    const audioToggleBtn = document.getElementById('assistant-audio-toggle');
 
     if (!toggleBtn || !chatWindow) return;
+
+    // Audio status state
+    let isAudioActive = localStorage.getItem('estela_audio_active') === 'true';
+
+    // Initialize audio button UI state
+    if (audioToggleBtn) {
+        if (isAudioActive) {
+            audioToggleBtn.classList.add('active');
+            audioToggleBtn.textContent = '🔊';
+        } else {
+            audioToggleBtn.classList.remove('active');
+            audioToggleBtn.textContent = '🔇';
+        }
+
+        audioToggleBtn.addEventListener('click', () => {
+            isAudioActive = !isAudioActive;
+            localStorage.setItem('estela_audio_active', isAudioActive);
+            if (isAudioActive) {
+                audioToggleBtn.classList.add('active');
+                audioToggleBtn.textContent = '🔊';
+                showToast('Leitura por voz ativada!', 'success');
+            } else {
+                audioToggleBtn.classList.remove('active');
+                audioToggleBtn.textContent = '🔇';
+                window.speechSynthesis.cancel();
+                showToast('Leitura por voz desativada.', 'info');
+            }
+        });
+    }
+
+    function speakText(text) {
+        if (!isAudioActive) return;
+        window.speechSynthesis.cancel(); // stop previous speech
+
+        // Strip HTML tags for speaking
+        const cleanText = text.replace(/<[^>]*>/g, '');
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'pt-BR';
+
+        const voices = window.speechSynthesis.getVoices();
+        const ptVoice = voices.find(v => v.lang.includes('pt-BR') || v.lang.includes('pt_BR'));
+        if (ptVoice) {
+            utterance.voice = ptVoice;
+        }
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Voice Dictation (Speech to Text)
+    let recognition = null;
+    let isRecording = false;
+
+    if (micBtn) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'pt-BR';
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.textContent = '🛑';
+                showToast('Estela ouvindo... Pode falar!', 'info');
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                micBtn.textContent = '🎙️';
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                micBtn.textContent = '🎙️';
+                showToast(`Erro na gravação: ${event.error}`, 'error');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                if (chatInput) {
+                    chatInput.value = transcript;
+                    chatInput.focus();
+                }
+            };
+
+            micBtn.addEventListener('click', () => {
+                if (isRecording) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+        } else {
+            micBtn.style.display = 'none'; // hide if not supported
+        }
+    }
 
     toggleBtn.addEventListener('click', () => {
         chatWindow.classList.toggle('active');
@@ -1507,6 +1740,7 @@ function initEstelaChatbot() {
             removeTypingIndicator();
 
             appendMessage(reply, false);
+            speakText(reply);
         });
     }
 
@@ -1522,6 +1756,7 @@ function initEstelaChatbot() {
                 removeTypingIndicator();
 
                 appendMessage(reply, false);
+                speakText(reply);
             }
         });
     }
@@ -1549,7 +1784,8 @@ let initialBoletins = [
         aluno: 'Grupo de modelagem da noite',
         observacoes: 'Material substituído temporariamente por réguas sobressalentes do Lab 2.',
         medidas: 'Orientação aos alunos, Registro em controle',
-        status: 'Registrado'
+        status: 'Registrado',
+        createdBy: 'geovana@senai.br'
     }
 ];
 
@@ -1578,33 +1814,58 @@ function setupNextPlanoCode() {
 
 // Render the grid of registered reports
 function renderRegisteredBoletins() {
-    const container = document.getElementById('boletins-grid-container');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (registeredBoletins.length === 0) {
-        container.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhum boletim registrado encontrado.</div>`;
-        return;
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let currentUserEmail = '';
+    if (registeredUserStr) {
+        const user = JSON.parse(registeredUserStr);
+        currentUserEmail = user.email || '';
     }
 
-    const sorted = [...registeredBoletins].reverse();
+    // Render "Minhas Denúncias"
+    const minhasContainer = document.getElementById('minhas-denuncias-grid-container');
+    if (minhasContainer) {
+        minhasContainer.innerHTML = '';
+        const minhasDenuncias = registeredBoletins.filter(b => b.createdBy === currentUserEmail);
+        if (minhasDenuncias.length === 0) {
+            minhasContainer.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhuma denúncia registrada por você.</div>`;
+        } else {
+            const sorted = [...minhasDenuncias].reverse();
+            sorted.forEach(b => {
+                minhasContainer.appendChild(createBoletimCard(b));
+            });
+        }
+    }
 
-    sorted.forEach(b => {
-        const card = document.createElement('div');
-        card.className = 'boletim-card-file';
-        card.innerHTML = `
-            <h3 class="boletim-card-title">${b.code}</h3>
-            <div class="boletim-card-meta">Data: <strong>${b.date}</strong></div>
-            <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
-            <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
-            <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
-            <div class="boletim-card-status">
-                <span class="status-tag">${b.status}</span>
-                <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">Visualizar</button>
-            </div>
-        `;
-        container.appendChild(card);
-    });
+    // Render "Denúncias Gerais"
+    const geraisContainer = document.getElementById('denuncias-gerais-grid-container');
+    if (geraisContainer) {
+        geraisContainer.innerHTML = '';
+        if (registeredBoletins.length === 0) {
+            geraisContainer.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhum boletim registrado encontrado.</div>`;
+        } else {
+            const sorted = [...registeredBoletins].reverse();
+            sorted.forEach(b => {
+                geraisContainer.appendChild(createBoletimCard(b));
+            });
+        }
+    }
+}
+
+function createBoletimCard(b) {
+    const card = document.createElement('div');
+    card.className = 'boletim-card-file';
+    card.innerHTML = `
+        <h3 class="boletim-card-title">${b.code}</h3>
+        <div class="boletim-card-meta">Data: <strong>${b.date}</strong></div>
+        <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
+        <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
+        <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
+        <div class="boletim-card-status">
+            <span class="status-tag">${b.status}</span>
+            <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">Visualizar</button>
+        </div>
+    `;
+    return card;
 }
 
 // Open registered reports details modal
