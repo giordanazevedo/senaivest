@@ -2,6 +2,13 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// Load local environment variables from .env file if available
+try {
+    require('dotenv').config();
+} catch (e) {
+    // dotenv not installed, using process.env directly
+}
+
 const PORT = process.env.PORT || 8000;
 const PUBLIC_DIR = __dirname;
 const MONGODB_URI = process.env.MONGODB_URI; // Set this in Railway/Render env vars
