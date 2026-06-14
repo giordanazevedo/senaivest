@@ -880,6 +880,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load fresh data from the server
     loadBackendData();
 
+    // Render initial analytics stats
+    renderAnalyticsDashboard();
+
     // Periodically check for lesson plan expirations (every 5 seconds)
     setInterval(checkLessonPlanExpirations, 5000);
 
@@ -1843,6 +1846,84 @@ function updateDashboardStats() {
 
     // Total reports count
     document.getElementById('stats-total-boletins').textContent = registeredBoletins.length;
+
+    // Render Analytics Dashboard (Teachers registers and Platform usage)
+    renderAnalyticsDashboard();
+}
+
+function renderAnalyticsDashboard() {
+    const tableBody = document.getElementById('dashboard-teachers-stats-body');
+    if (!tableBody) return;
+
+    // 1. Gather all unique teachers
+    // Start with a predefined list of default teachers + any teacher from plans or registeredUser
+    const teacherSet = new Set(['Prof(a). Carol', 'Prof. Carlos', 'Prof(a). Emanuela']);
+    
+    // Add teachers who registered plans
+    lessonPlans.forEach(p => {
+        if (p.professor) teacherSet.add(p.professor);
+    });
+
+    // Add current user if exists
+    const currentUserStr = localStorage.getItem('registeredUser');
+    if (currentUserStr) {
+        try {
+            const user = JSON.parse(currentUserStr);
+            if (user.name) teacherSet.add(user.name);
+        } catch(e){}
+    }
+
+    const teachersList = Array.from(teacherSet);
+    
+    // 2. Count plans per teacher
+    const plansCount = {};
+    teachersList.forEach(t => plansCount[t] = 0);
+    lessonPlans.forEach(p => {
+        if (p.professor && plansCount[p.professor] !== undefined) {
+            plansCount[p.professor]++;
+        } else if (p.professor) {
+            plansCount[p.professor] = 1;
+        }
+    });
+
+    // 3. Render table rows
+    tableBody.innerHTML = '';
+    let activeCount = 0;
+    let inactiveCount = 0;
+
+    teachersList.forEach(t => {
+        const count = plansCount[t] || 0;
+        const isActive = count > 0;
+        if (isActive) activeCount++;
+        else inactiveCount++;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding: 10px; font-weight: 500;">${t}</td>
+            <td style="padding: 10px; text-align: center; font-weight: 700; color: var(--primary-beige);">${count}</td>
+            <td style="padding: 10px; text-align: right;">
+                <span style="font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; ${isActive ? 'color: var(--accent-green); background: rgba(46,204,113,0.1);' : 'color: var(--accent-red); background: rgba(192,57,43,0.1);'}">
+                    ${isActive ? 'ATIVO' : 'INATIVO'}
+                </span>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+
+    // 4. Update metrics counters
+    const totalCount = teachersList.length;
+    const usagePercentage = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
+
+    document.getElementById('active-teachers-count').textContent = activeCount;
+    document.getElementById('inactive-teachers-count').textContent = inactiveCount;
+    document.getElementById('total-teachers-count').textContent = totalCount;
+    document.getElementById('platform-usage-pct').textContent = `${usagePercentage}%`;
+
+    // Update conic gradient of radial progress
+    const radial = document.getElementById('platform-usage-radial');
+    if (radial) {
+        radial.style.background = `radial-gradient(circle, var(--bg-card) 60%, transparent 61%), conic-gradient(var(--primary-beige) 0% ${usagePercentage}%, var(--border-color) ${usagePercentage}% 100%)`;
+    }
 }
 
 // DASHBOARD LOG GENERATOR
@@ -3004,19 +3085,37 @@ function checkLessonPlanExpirations() {
             plan.expired = true;
             changed = true;
             
+            const planCode = plan.code || `PLAN-${500 + plan.id}`;
+            const professor = plan.professor || 'Não informado';
+            
+            // Collect resource names and quantities to return
+            const materialsList = plan.resources.map(res => `• ${res.name} (Qtd: ${res.quantity || 'Retirada'})`).join('\n');
+            const materialsSpeech = plan.resources.map(res => `${res.name}`).join(', ');
+            
+            // Build Estela assistant messages
+            const alertMsg = `🚨 <strong>Prazo Excedido — ${planCode}</strong><br>` +
+                             `O plano de aula registrado pelo(a) <strong>${professor}</strong> encerrou.<br>` +
+                             `Os seguintes materiais devem ser devolvidos imediatamente ao almoxarifado:<br>` +
+                             materialsList.replace(/\n/g, '<br>');
+            
+            if (window.appendEstelaMessage) {
+                window.appendEstelaMessage(alertMsg, false);
+            }
+            if (window.speakEstelaText) {
+                window.speakEstelaText(`Atenção: O prazo do plano de aula ${planCode} foi excedido. O material deve ser devolvido imediatamente pelo professor ${professor}. Pendente: ${materialsSpeech}.`);
+            }
+            
             plan.resources.forEach(res => {
                 const item = inventory.find(i => i.id === res.id);
                 if (item) {
                     // ★ CLASSIFICAÇÃO AUTOMÁTICA DE PERTENCIMENTO
                     const originLab = item.originLab || item.lab;
-                    const professor = item.transferInfo?.professor || plan.professor || 'Não informado';
                     const transferTime = item.transferInfo?.time || new Date(planStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     const transferDate = new Date(planStart).toLocaleDateString('pt-BR');
                     const originLabObj = registeredLabs.find(l => l.id === originLab);
                     const originLabName = originLabObj ? originLabObj.name : `Lab ${originLab}`;
                     const currentLabObj = registeredLabs.find(l => l.id === item.lab);
                     const currentLabName = currentLabObj ? currentLabObj.name : `Lab ${item.lab}`;
-                    const planCode = plan.code || `PLAN-${500 + plan.id}`;
                     
                     // Calcular tempo excedido
                     const tempoExcedidoMs = now - planEnd;
