@@ -2490,9 +2490,31 @@ function renderRegisteredBoletins() {
 function createBoletimCard(b) {
     const card = document.createElement('div');
     card.className = 'boletim-card-file';
+    
+    // Categorias visual mapping
+    const catMap = {
+        'roubo':        { label: 'Roubo', color: 'var(--accent-red)', icon: '🚨', bg: 'rgba(192, 57, 43, 0.15)' },
+        'furto':        { label: 'Furto', color: 'var(--accent-orange)', icon: '🕵️', bg: 'rgba(230, 126, 34, 0.15)' },
+        'avaria':       { label: 'Avaria', color: '#f1c40f', icon: '⚠️', bg: 'rgba(241, 196, 15, 0.15)' },
+        'extravio':     { label: 'Extravio', color: 'var(--accent-blue-light)', icon: '🔍', bg: 'rgba(58, 142, 230, 0.15)' },
+        'naodevolvido': { label: 'Não Devolvido', color: '#9b59b6', icon: '⏳', bg: 'rgba(155, 89, 182, 0.15)' },
+        'divergencia':  { label: 'Divergência', color: '#1abc9c', icon: '📊', bg: 'rgba(26, 188, 156, 0.15)' },
+        'outros':       { label: 'Outros', color: 'var(--primary-beige)', icon: '📝', bg: 'rgba(211, 188, 162, 0.15)' }
+    };
+    
+    const catInfo = catMap[b.categoria] || catMap['outros'];
     const timeText = b.timeOfDay ? ` às ${b.timeOfDay}` : '';
+
+    // Set border top color dynamically
+    card.style.borderTop = `5px solid ${catInfo.color}`;
+
     card.innerHTML = `
-        <h3 class="boletim-card-title">${b.code}</h3>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+            <h3 class="boletim-card-title" style="margin-bottom: 0;">${b.code}</h3>
+            <span style="font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; color: ${catInfo.color}; background: ${catInfo.bg}; display: flex; align-items: center; gap: 4px;">
+                <span>${catInfo.icon}</span> <span>${catInfo.label}</span>
+            </span>
+        </div>
         <div class="boletim-card-meta">Data/Hora: <strong>${b.date}${timeText}</strong></div>
         <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
         <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
