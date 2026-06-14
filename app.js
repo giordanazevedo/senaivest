@@ -1160,7 +1160,9 @@ function handleAddProductSubmit(e) {
     const quantity = document.getElementById('prod-quantidade').value.trim();
     const location = document.getElementById('prod-localizacao').value.trim();
     const responsavel = document.getElementById('prod-responsavel').value.trim();
-    const status = document.getElementById('prod-status').value;
+
+    // ★ STATUS AUTOMÁTICO: Todo produto cadastrado em seu almoxarifado é automaticamente "Pertencente"
+    const status = 'Pertencente';
 
     // Determine category emoji and gradients
     let emoji = '📦';
@@ -1176,7 +1178,7 @@ function handleAddProductSubmit(e) {
     const newItem = {
         id: inventory.length + 1,
         lab: labId,
-        originLab: labId,
+        originLab: labId, // ★ Almoxarifado de origem = local de cadastro
         category,
         name,
         quantity,
@@ -1295,7 +1297,8 @@ function handleBoletimSubmit(e) {
         observacoes: observacoes || 'Nenhuma',
         medidas: medidas || 'Nenhuma registrada',
         status: 'Registrado',
-        createdBy: currentUserEmail
+        createdBy: currentUserEmail,
+        categoria: document.getElementById('boletim-categoria-selecionada').value || 'outros'
     };
 
     registeredBoletins.push(newBoletim);
@@ -1307,7 +1310,8 @@ function handleBoletimSubmit(e) {
     // Trigger warning notification in system
     addNotification('warning', `Alerta de Ocorrência: ${material}`, `Boletim ${codigo} registrado para o material "${material}".`);
 
-    showToast('Boletim de Ocorrência enviado com sucesso!', 'success');
+    // ★ Mensagem de sucesso personalizada
+    showToast('Seu boletim foi registrado com sucesso e encaminhado para análise. Em breve a coordenação entrará em contato.', 'success');
     
     // Render the updated list
     renderRegisteredBoletins();
@@ -1320,12 +1324,19 @@ function handleBoletimSubmit(e) {
     setupNextBoletimCode();
     
     updateDashboardStats();
+
+    // ★ Gerar PDF automaticamente e tentar enviar por e-mail
+    const boletimId = newBoletim.id;
+    setTimeout(() => {
+        generateBoletimPDF(boletimId);
+        sendBoletimByEmail(newBoletim);
+    }, 500);
     
     // Redirect to personal reports tab
     setTimeout(() => {
         switchTab('ocorrencias');
         switchOcorrenciasTab('minhas');
-    }, 1000);
+    }, 2000);
 }
 
 // HANDLE LESSON PLAN SUBMISSION
@@ -2242,10 +2253,15 @@ function createBoletimCard(b) {
     return card;
 }
 
+// ★ Variável global para armazenar o ID do boletim em visualização (usada pelo botão PDF)
+let currentViewBoletimId = null;
+
 // Open registered reports details modal
 function openBoletimDetailsModal(id) {
     const b = registeredBoletins.find(item => item.id === id);
     if (!b) return;
+
+    currentViewBoletimId = id; // ★ Salvar ID para uso no botão PDF
 
     document.getElementById('view-boletim-doc-code').textContent = `BOLETIM DE OCORRÊNCIA – COD: ${b.code}`;
     document.getElementById('view-boletim-data').textContent = b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : '');
@@ -2307,6 +2323,7 @@ function renderSchools() {
             <div class="school-card-info">
                 <span class="school-card-name">${school.name}</span>
                 <span class="school-card-meta">Sigla: ${school.code} | Cidade: ${school.city}</span>
+                ${school.coordinatorEmail ? `<span class="school-card-meta" style="color: var(--accent-green);">📧 ${school.coordinatorEmail}</span>` : '<span class="school-card-meta" style="color: var(--accent-red);">⚠️ Sem e-mail da coordenação</span>'}
             </div>
             <button class="btn-delete-school" onclick="deleteSchool(${school.id})" title="Excluir Escola">🗑️</button>
         `;
@@ -2319,6 +2336,12 @@ function handleSchoolRegistrationSubmit(e) {
     const name = document.getElementById('school-name').value.trim();
     const code = document.getElementById('school-code').value.trim().toUpperCase();
     const city = document.getElementById('school-city').value.trim();
+    const coordinatorEmail = document.getElementById('school-coordinator-email').value.trim();
+    
+    if (!coordinatorEmail) {
+        showToast('O e-mail da coordenação é obrigatório!', 'error');
+        return;
+    }
     
     if (registeredSchools.some(s => s.code === code)) {
         showToast('Já existe uma escola cadastrada com este código!', 'error');
@@ -2329,7 +2352,8 @@ function handleSchoolRegistrationSubmit(e) {
         id: registeredSchools.length > 0 ? Math.max(...registeredSchools.map(s => s.id)) + 1 : 1,
         name,
         code,
-        city
+        city,
+        coordinatorEmail
     };
     
     registeredSchools.push(newSchool);
@@ -2812,25 +2836,68 @@ function checkLessonPlanExpirations() {
             plan.resources.forEach(res => {
                 const item = inventory.find(i => i.id === res.id);
                 if (item) {
-                    if (item.originLab && item.lab !== item.originLab) {
-                        // Mark as inconformidade and update status
+                    // ★ CLASSIFICAÇÃO AUTOMÁTICA DE PERTENCIMENTO
+                    const originLab = item.originLab || item.lab;
+                    const professor = item.transferInfo?.professor || plan.professor || 'Não informado';
+                    const transferTime = item.transferInfo?.time || new Date(planStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const transferDate = new Date(planStart).toLocaleDateString('pt-BR');
+                    const originLabObj = registeredLabs.find(l => l.id === originLab);
+                    const originLabName = originLabObj ? originLabObj.name : `Lab ${originLab}`;
+                    const currentLabObj = registeredLabs.find(l => l.id === item.lab);
+                    const currentLabName = currentLabObj ? currentLabObj.name : `Lab ${item.lab}`;
+                    const planCode = plan.code || `PLAN-${500 + plan.id}`;
+                    
+                    // Calcular tempo excedido
+                    const tempoExcedidoMs = now - planEnd;
+                    const tempoExcedidoMin = Math.floor(tempoExcedidoMs / 60000);
+                    let tempoExcedidoStr = '';
+                    if (tempoExcedidoMin < 60) {
+                        tempoExcedidoStr = `${tempoExcedidoMin} minuto(s)`;
+                    } else {
+                        const horas = Math.floor(tempoExcedidoMin / 60);
+                        const mins = tempoExcedidoMin % 60;
+                        tempoExcedidoStr = `${horas}h${mins > 0 ? mins + 'min' : ''}`;
+                    }
+                    
+                    if (item.lab !== originLab) {
+                        // ★ CASO 1: Produto em almoxarifado diferente do de origem → "Não Pertencente" + inconformidade
                         item.inconformidade = true;
-                        item.status = 'Não apresenta no estoque';
-                        
-                        // Gather transfer info for rich notification
-                        const professor = item.transferInfo?.professor || plan.professor || 'Não informado';
-                        const transferTime = item.transferInfo?.time || new Date(planStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                        const originLabObj = registeredLabs.find(l => l.id === item.originLab);
-                        const originLabName = originLabObj ? originLabObj.name : `Lab ${item.originLab}`;
+                        item.status = 'Não Pertencente';
                         
                         addNotification(
                             'warning', 
-                            `⚠️ Inconfomidade de Material — Plano ${plan.code}`, 
-                            `O material "${item.name}" (${item.quantity}) NÃO foi devolvido ao ${originLabName} após o término da aula "${plan.topic || plan.code}". ` +
-                            `Responsável: Prof(a). ${professor} | Horário da saída: ${transferTime} | Escola: ${plan.escola || 'SENAI'}.`
+                            `⚠️ Produto não devolvido — ${planCode}`, 
+                            `O produto "${item.name}" (Cód: ${item.id}) não retornou ao seu local de origem (${originLabName}) dentro do prazo previsto.\n` +
+                            `• Responsável pela retirada: ${professor}\n` +
+                            `• Código do plano de aula: ${planCode}\n` +
+                            `• Almoxarifado de origem: ${originLabName}\n` +
+                            `• Almoxarifado atual: ${currentLabName}\n` +
+                            `• Data da movimentação: ${transferDate}\n` +
+                            `• Horário da movimentação: ${transferTime}\n` +
+                            `• Tempo excedido: ${tempoExcedidoStr}\n` +
+                            `• Situação: Não Pertencente (produto localizado em almoxarifado diferente do de origem)`
                         );
                         
-                        showToast(`Atraso na devolução: ${item.name} no Lab ${item.lab}!`, 'error');
+                        showToast(`⚠️ Atraso na devolução: ${item.name} (${tempoExcedidoStr} excedido)`, 'error');
+                    } else {
+                        // ★ CASO 2: Produto deveria estar aqui mas verificação indica que não está em nenhum local registrado
+                        // (Este cenário ocorre se o item foi removido do inventário ou não encontrado)
+                        const itemExists = inventory.some(i => i.id === res.id);
+                        if (!itemExists) {
+                            addNotification(
+                                'warning',
+                                `🔴 Produto não apresentado em estoque — ${planCode}`,
+                                `O produto "${res.name}" (Cód: ${res.id}) não foi localizado em nenhum almoxarifado registrado após o encerramento da atividade.\n` +
+                                `• Responsável pela retirada: ${professor}\n` +
+                                `• Código do plano de aula: ${planCode}\n` +
+                                `• Data da movimentação: ${transferDate}\n` +
+                                `• Horário da movimentação: ${transferTime}\n` +
+                                `• Tempo excedido: ${tempoExcedidoStr}\n` +
+                                `• Situação: Não Apresentado em Estoque`
+                            );
+                            
+                            showToast(`🔴 Produto não localizado: ${res.name}`, 'error');
+                        }
                     }
                 }
             });
@@ -2866,6 +2933,276 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ======================================================
+// ★ BOLETIM CATEGORY SELECTION FUNCTIONS
+// ======================================================
+
+const CATEGORY_MAP = {
+    'roubo':        { icon: '🚨', label: 'Roubo' },
+    'furto':        { icon: '🕵️', label: 'Furto' },
+    'avaria':       { icon: '⚠️', label: 'Avaria' },
+    'extravio':     { icon: '🔍', label: 'Extravio' },
+    'naodevolvido': { icon: '⏳', label: 'Produto não devolvido' },
+    'divergencia':  { icon: '📊', label: 'Divergência de estoque' },
+    'outros':       { icon: '📝', label: 'Outros' }
+};
+
+function selectBoletimCategoria(cardEl) {
+    const cat = cardEl.getAttribute('data-cat');
+    const catInfo = CATEGORY_MAP[cat] || { icon: '📝', label: 'Outros' };
+    
+    // Save selected category
+    document.getElementById('boletim-categoria-selecionada').value = cat;
+    
+    // Update badge in form header
+    document.getElementById('boletim-badge-icon').textContent = catInfo.icon;
+    document.getElementById('boletim-badge-label').textContent = catInfo.label;
+    
+    // Hide category selector, show form
+    document.getElementById('boletim-categoria-selector').style.display = 'none';
+    document.getElementById('boletim-form').style.display = 'block';
+    
+    // Scroll to top of form
+    document.getElementById('boletim-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function voltarCategoriaBoletim() {
+    // Show category selector, hide form
+    document.getElementById('boletim-categoria-selector').style.display = '';
+    document.getElementById('boletim-form').style.display = 'none';
+    document.getElementById('boletim-categoria-selecionada').value = '';
+}
+
+// ======================================================
+// ★ PDF GENERATION (jsPDF) — Boletim de Ocorrência
+// ======================================================
+
+function generateBoletimPDF(boletimId) {
+    const b = registeredBoletins.find(item => item.id === boletimId);
+    if (!b) {
+        showToast('Boletim não encontrado para gerar PDF.', 'error');
+        return null;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+        const contentWidth = pageWidth - margin * 2;
+        let y = 20;
+        
+        // ─── HEADER ───
+        doc.setFillColor(44, 62, 80);
+        doc.rect(0, 0, pageWidth, 35, 'F');
+        
+        doc.setTextColor(211, 188, 162);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text('SENAIVEST', margin, 15);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.text('Sistema de Controle de Almoxarifado - Laboratórios de Vestuário SENAI', margin, 23);
+        
+        doc.setFontSize(9);
+        doc.setTextColor(200, 200, 200);
+        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, margin, 30);
+        
+        y = 45;
+        
+        // ─── DOCUMENT TITLE ───
+        doc.setTextColor(44, 62, 80);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text(`BOLETIM DE OCORRÊNCIA — ${b.code}`, margin, y);
+        y += 8;
+        
+        // ─── CATEGORY BADGE ───
+        const catInfo = CATEGORY_MAP[b.categoria] || { icon: '📝', label: b.categoria || 'Outros' };
+        doc.setFillColor(211, 188, 162);
+        doc.roundedRect(margin, y, 65, 8, 2, 2, 'F');
+        doc.setTextColor(44, 62, 80);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Categoria: ${catInfo.label}`, margin + 3, y + 5.5);
+        y += 15;
+        
+        // ─── SEPARATOR ───
+        doc.setDrawColor(211, 188, 162);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 8;
+        
+        // ─── HELPER: Add a labeled row ───
+        function addRow(label, value, bold = false) {
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text(label, margin, y);
+            
+            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+            doc.setTextColor(44, 62, 80);
+            doc.setFontSize(10);
+            
+            const lines = doc.splitTextToSize(String(value || 'N/A'), contentWidth - 55);
+            doc.text(lines, margin + 55, y);
+            y += Math.max(7, lines.length * 5);
+        }
+        
+        // ─── DATA FIELDS ───
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(211, 188, 162);
+        doc.text('DADOS DA OCORRÊNCIA', margin, y);
+        y += 8;
+        
+        addRow('Código:', b.code, true);
+        addRow('Data:', b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : ''));
+        addRow('Curso/Turma:', b.curso);
+        addRow('Professor:', b.professor);
+        y += 3;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(211, 188, 162);
+        doc.text('IDENTIFICAÇÃO DO MATERIAL', margin, y);
+        y += 8;
+        
+        addRow('Material:', b.material, true);
+        addRow('Tipo:', b.tipo);
+        addRow('Cód. Plano:', b.planoCodigo || 'N/A');
+        addRow('Lab. Origem:', b.origem);
+        y += 3;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(211, 188, 162);
+        doc.text('DESCRIÇÃO', margin, y);
+        y += 8;
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(44, 62, 80);
+        const descLines = doc.splitTextToSize(b.descricao || 'Sem descrição', contentWidth);
+        doc.text(descLines, margin, y);
+        y += descLines.length * 4.5 + 5;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(211, 188, 162);
+        doc.text('QUANTIDADES', margin, y);
+        y += 8;
+        
+        addRow('Qtd. Prevista:', b.qtdPrevista);
+        addRow('Qtd. Encontrada:', b.qtdEncontrada);
+        addRow('Diferença:', b.qtdDiferenca, true);
+        y += 3;
+        
+        addRow('Situação:', b.situacao);
+        addRow('Aluno/Grupo:', b.aluno);
+        addRow('Observações:', b.observacoes);
+        addRow('Medidas:', b.medidas);
+        y += 5;
+        
+        // ─── RESPONSABLE INFO ───
+        const registeredUserStr = localStorage.getItem('registeredUser');
+        if (registeredUserStr) {
+            const user = JSON.parse(registeredUserStr);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(211, 188, 162);
+            doc.text('RESPONSÁVEL PELO REGISTRO', margin, y);
+            y += 8;
+            addRow('Nome:', user.name || 'N/A');
+            addRow('E-mail:', user.email || 'N/A');
+            addRow('Telefone:', user.phone || 'N/A');
+        }
+        
+        // ─── FOOTER ───
+        const footerY = doc.internal.pageSize.getHeight() - 15;
+        doc.setDrawColor(211, 188, 162);
+        doc.setLineWidth(0.3);
+        doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text('© 2026 SENAIVEST — Sistema de Controle de Almoxarifado - Laboratórios de Vestuário SENAI', margin, footerY);
+        doc.text('Documento gerado automaticamente pelo sistema. Válido sem assinatura.', margin, footerY + 4);
+        
+        // ─── SAVE/DOWNLOAD ───
+        doc.save(`${b.code}_Boletim_Ocorrencia.pdf`);
+        showToast(`📄 PDF do boletim ${b.code} gerado com sucesso!`, 'success');
+        
+        // Return base64 for email sending
+        return doc.output('datauristring');
+    } catch (err) {
+        console.error('Erro ao gerar PDF:', err);
+        showToast('Erro ao gerar PDF. Verifique se a biblioteca jsPDF foi carregada.', 'error');
+        return null;
+    }
+}
+
+// ======================================================
+// ★ EMAIL SENDING — Boletim para coordenação da escola
+// ======================================================
+
+async function sendBoletimByEmail(boletim) {
+    // Find the school associated with the boletim (via lesson plan escola or fallback to first school)
+    let targetSchool = null;
+    
+    // Try to find by plano code
+    if (boletim.planoCodigo) {
+        const plan = lessonPlans.find(p => p.code === boletim.planoCodigo);
+        if (plan && plan.escola) {
+            targetSchool = registeredSchools.find(s => s.code === plan.escola);
+        }
+    }
+    
+    // Fallback: use first school with coordinator email
+    if (!targetSchool) {
+        targetSchool = registeredSchools.find(s => s.coordinatorEmail);
+    }
+    
+    if (!targetSchool || !targetSchool.coordinatorEmail) {
+        console.warn('Nenhuma escola com e-mail de coordenação encontrada para envio do boletim.');
+        addNotification('info', 'Envio de e-mail pendente', 
+            `O boletim ${boletim.code} foi registrado, mas não foi possível enviar por e-mail pois nenhuma escola possui e-mail de coordenação cadastrado.`);
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/send-boletim-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                boletim,
+                schoolEmail: targetSchool.coordinatorEmail,
+                schoolName: targetSchool.name
+            })
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+            addNotification('success', `📧 Boletim enviado por e-mail`, 
+                `O boletim ${boletim.code} foi encaminhado com sucesso para ${targetSchool.coordinatorEmail} (${targetSchool.name}).`);
+            showToast(`📧 Boletim enviado para ${targetSchool.coordinatorEmail}`, 'success');
+        } else {
+            console.warn('Erro ao enviar e-mail:', data);
+            addNotification('info', 'Envio de e-mail (modo offline)', 
+                `O boletim ${boletim.code} foi registrado localmente. O envio para ${targetSchool.coordinatorEmail} será feito quando o servidor SMTP estiver configurado.`);
+        }
+    } catch (err) {
+        console.warn('Servidor offline para envio de e-mail:', err);
+        addNotification('info', 'Envio de e-mail (modo offline)', 
+            `O boletim ${boletim.code} foi registrado. O envio por e-mail para a coordenação será realizado quando o servidor estiver disponível.`);
+    }
+}
 
 // ======================================================
 // MULTI-USER SYNC: Polling a cada 15 segundos

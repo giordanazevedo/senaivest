@@ -274,6 +274,82 @@ async function handleRequest(req, res) {
             return;
         }
 
+        // POST /api/send-boletim-email — send boletim PDF to school coordination email
+        if (safeUrl === '/api/send-boletim-email' && req.method === 'POST') {
+            const payload = parseJSON(body);
+            if (!payload || !payload.boletim || !payload.schoolEmail) {
+                respond(res, 400, { error: 'Dados do boletim e e-mail da escola são obrigatórios.' });
+                return;
+            }
+            
+            const { boletim, schoolEmail, schoolName } = payload;
+            const smtpHost = process.env.SMTP_HOST;
+            const smtpUser = process.env.SMTP_USER;
+            const smtpPass = process.env.SMTP_PASS;
+            const smtpFrom = process.env.SMTP_FROM || 'senaivest@senai.br';
+            
+            if (smtpHost && smtpUser && smtpPass) {
+                // Real email sending with nodemailer
+                try {
+                    const nodemailer = require('nodemailer');
+                    const transporter = nodemailer.createTransport({
+                        host: smtpHost,
+                        port: parseInt(process.env.SMTP_PORT || '587'),
+                        secure: (process.env.SMTP_PORT || '587') === '465',
+                        auth: { user: smtpUser, pass: smtpPass }
+                    });
+                    
+                    const htmlBody = `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <div style="background: #2c3e50; padding: 20px; text-align: center;">
+                                <h1 style="color: #d3bca2; margin: 0;">SENAIVEST</h1>
+                                <p style="color: #fff; margin: 5px 0 0;">Sistema de Controle de Almoxarifado</p>
+                            </div>
+                            <div style="padding: 25px; background: #f9f9f9;">
+                                <h2 style="color: #2c3e50;">Boletim de Ocorrência: ${boletim.code}</h2>
+                                <p>Um novo boletim de ocorrência foi registrado no sistema SENAIVEST.</p>
+                                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Categoria:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.categoria || 'N/A'}</td></tr>
+                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Data:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.date} ${boletim.timeOfDay ? 'às ' + boletim.timeOfDay : ''}</td></tr>
+                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Professor:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.professor}</td></tr>
+                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Material:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.material}</td></tr>
+                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Situação:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.situacao}</td></tr>
+                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Descrição:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.descricao}</td></tr>
+                                </table>
+                                <p style="color: #666; font-size: 0.85rem;">O PDF completo do boletim pode ser gerado diretamente no sistema SENAIVEST.</p>
+                            </div>
+                            <div style="background: #2c3e50; padding: 15px; text-align: center;">
+                                <p style="color: #888; font-size: 0.75rem; margin: 0;">© 2026 SENAIVEST — Plataforma de Gestão de Almoxarifados SENAI</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    await transporter.sendMail({
+                        from: `"SENAIVEST" <${smtpFrom}>`,
+                        to: schoolEmail,
+                        subject: `[SENAIVEST] Boletim de Ocorrência ${boletim.code} — ${boletim.material}`,
+                        html: htmlBody
+                    });
+                    
+                    console.log(`✅ E-mail enviado para ${schoolEmail} (${schoolName}) — Boletim ${boletim.code}`);
+                    respond(res, 200, { message: 'E-mail enviado com sucesso!', sent: true });
+                } catch (emailErr) {
+                    console.error('❌ Erro ao enviar e-mail:', emailErr.message);
+                    respond(res, 500, { error: 'Falha ao enviar e-mail.', details: emailErr.message });
+                }
+            } else {
+                // SMTP not configured — simulate (local dev mode)
+                console.log(`📧 [SIMULADO] Boletim ${boletim.code} seria enviado para ${schoolEmail} (${schoolName})`);
+                console.log(`   Material: ${boletim.material} | Prof: ${boletim.professor} | Situação: ${boletim.situacao}`);
+                respond(res, 200, { 
+                    message: 'E-mail registrado (modo simulado — configure SMTP_HOST, SMTP_USER, SMTP_PASS para envio real).', 
+                    sent: false, 
+                    simulated: true 
+                });
+            }
+            return;
+        }
+
         respond(res, 404, { error: 'Endpoint não encontrado.' });
         return;
     }

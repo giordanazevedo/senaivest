@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SENAIVEST - Painel de Controle</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <!-- Authentication Screen Overlay (Cadastro / Login) -->
@@ -423,9 +424,62 @@
                 <div class="boletim-page-container">
                     <div class="boletim-header">
                         <h1>BOLETIM DE DENÚNCIA</h1>
+                        <p style="color: var(--text-muted); margin-top: 8px; font-size: 0.9rem;">Selecione a categoria da ocorrência para registrar:</p>
                     </div>
-                    
-                    <form id="boletim-form" class="boletim-paper">
+
+                    <!-- ⬛ CATEGORIA SELECTOR — user picks type first -->
+                    <div class="boletim-categoria-selector" id="boletim-categoria-selector">
+                        <div class="cat-card" data-cat="roubo" onclick="selectBoletimCategoria(this)">
+                            <div class="cat-icon">🚨</div>
+                            <div class="cat-label">Roubo</div>
+                            <div class="cat-desc">Material subtraído mediante ameaça ou violência</div>
+                        </div>
+                        <div class="cat-card" data-cat="furto" onclick="selectBoletimCategoria(this)">
+                            <div class="cat-icon">🕵️</div>
+                            <div class="cat-label">Furto</div>
+                            <div class="cat-desc">Material desaparecido sem identificação do responsável</div>
+                        </div>
+                        <div class="cat-card" data-cat="avaria" onclick="selectBoletimCategoria(this)">
+                            <div class="cat-icon">⚠️</div>
+                            <div class="cat-label">Avaria</div>
+                            <div class="cat-desc">Material danificado ou quebrado</div>
+                        </div>
+                        <div class="cat-card" data-cat="extravio" onclick="selectBoletimCategoria(this)">
+                            <div class="cat-icon">🔍</div>
+                            <div class="cat-label">Extravio</div>
+                            <div class="cat-desc">Material perdido ou não localizado</div>
+                        </div>
+                        <div class="cat-card" data-cat="naodevolvido" onclick="selectBoletimCategoria(this)">
+                            <div class="cat-icon">⏳</div>
+                            <div class="cat-label">Produto não devolvido</div>
+                            <div class="cat-desc">Material não retornou ao almoxarifado no prazo</div>
+                        </div>
+                        <div class="cat-card" data-cat="divergencia" onclick="selectBoletimCategoria(this)">
+                            <div class="cat-icon">📊</div>
+                            <div class="cat-label">Divergência de estoque</div>
+                            <div class="cat-desc">Quantidade em sistema difere da quantidade física</div>
+                        </div>
+                        <div class="cat-card" data-cat="outros" onclick="selectBoletimCategoria(this)">
+                            <div class="cat-icon">📝</div>
+                            <div class="cat-label">Outros</div>
+                            <div class="cat-desc">Outra situação não listada acima</div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden field to store selected category -->
+                    <input type="hidden" id="boletim-categoria-selecionada" value="">
+
+                    <!-- ⬛ THE FORM (hidden until category is selected) -->
+                    <form id="boletim-form" class="boletim-paper" style="display: none;">
+                        <!-- Category badge shown at top of form -->
+                        <div id="boletim-form-categoria-badge" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 12px 16px; background: rgba(211,188,162,0.1); border-left: 4px solid var(--primary-beige); border-radius: 4px;">
+                            <span id="boletim-badge-icon" style="font-size: 1.8rem;"></span>
+                            <div>
+                                <div style="font-weight: 700; font-size: 1.1rem; color: var(--primary-beige);" id="boletim-badge-label"></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Categoria selecionada — <a href="#" onclick="voltarCategoriaBoletim(); return false;" style="color: var(--primary-beige);">Trocar</a></div>
+                            </div>
+                        </div>
+
                         <div class="boletim-title">
                             BOLETIM DE OCORRÊNCIA DE MATERIAL – ALMOXARIFADO DE VESTUÁRIO
                         </div>
@@ -462,7 +516,7 @@
 
                         <div class="form-row">
                             <div class="form-group-boletim">
-                                <label>Tipo:</label>
+                                <label>Tipo de Material:</label>
                                 <div class="checkbox-group">
                                     <label class="checkbox-label">
                                         <input type="radio" name="boletim-tipo" value="Tecido" checked> Tecido
@@ -495,7 +549,7 @@
                         <div class="boletim-section-title">2. Descrição da Ocorrência</div>
                         <div class="form-row">
                             <div class="form-group-boletim">
-                                <textarea id="boletim-descricao" placeholder="Descreva os detalhes da ocorrência (ex: quebra, avaria, roubo ou descarte indevido do material)..."></textarea>
+                                <textarea id="boletim-descricao" placeholder="Descreva os detalhes da ocorrência..."></textarea>
                             </div>
                         </div>
 
@@ -589,7 +643,8 @@
                         </div>
 
                         <div class="boletim-actions">
-                            <button type="submit" class="btn-submit-boletim">Enviar Relatório</button>
+                            <button type="button" class="btn-cancel-boletim" onclick="voltarCategoriaBoletim()" style="margin-right: 10px;">← Cancelar</button>
+                            <button type="submit" class="btn-submit-boletim">📧 Enviar Relatório</button>
                         </div>
                     </form>
                 </div>
@@ -751,6 +806,11 @@
                                 <div class="form-group-reg">
                                     <label for="school-city">Cidade / Município</label>
                                     <input type="text" id="school-city" class="form-control-reg" placeholder="Ex: Teresina" required>
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="school-coordinator-email">📧 E-mail da Coordenação <span style="color: var(--accent-red);">*</span></label>
+                                    <input type="email" id="school-coordinator-email" class="form-control-reg" placeholder="Ex: coordenacao@senai.br" required>
+                                    <div class="cadastro-subtext-reg">* Obrigatório — Boletins de ocorrência serão enviados automaticamente para este e-mail</div>
                                 </div>
                                 <button type="submit" class="btn-save-avatar" style="margin-top: 15px;">Cadastrar Escola</button>
                             </form>
@@ -934,13 +994,14 @@
                         <input type="text" id="prod-responsavel" class="form-control" placeholder="Ex: Prof. Carlos" required>
                     </div>
 
-                    <div class="form-group">
-                        <label for="prod-status">Situação de Pertença</label>
-                        <select id="prod-status" class="form-control" required>
-                            <option value="Pertencente">Pertencente</option>
-                            <option value="Não Pertencente">Não Pertencente</option>
-                            <option value="Não apresenta no estoque">Não apresenta no estoque (Indisponível)</option>
-                        </select>
+                    <!-- Status de pertença é definido AUTOMATICAMENTE pelo sistema -->
+                    <input type="hidden" id="prod-status" value="Pertencente">
+                    <div class="form-group" style="background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.3); border-radius: 8px; padding: 12px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; color: var(--accent-green); font-size: 0.85rem; font-weight: 600;">
+                            <span>✅</span>
+                            <span>Situação de Pertença: <strong>Pertencente</strong> (definido automaticamente pelo sistema)</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">O status será gerenciado com base nas movimentações registradas.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1173,8 +1234,11 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
                 <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-view-boletim')">Fechar Relatório</button>
+                <button type="button" class="btn-modal-submit" onclick="generateBoletimPDF(currentViewBoletimId)" style="display: flex; align-items: center; gap: 8px;">
+                    📄 Gerar PDF
+                </button>
             </div>
         </div>
     </div>
