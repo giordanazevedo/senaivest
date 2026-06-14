@@ -34,6 +34,14 @@
                     <input type="date" id="first-reg-nascimento" class="form-control-reg" required>
                 </div>
                 <div class="form-group-reg">
+                    <label for="first-reg-instituicao">Instituição / Escola</label>
+                    <input type="text" id="first-reg-instituicao" class="form-control-reg" placeholder="Ex: SENAI Primavera" required>
+                </div>
+                <div class="form-group-reg">
+                    <label for="first-reg-cargo">Cargo ou Função</label>
+                    <input type="text" id="first-reg-cargo" class="form-control-reg" placeholder="Ex: Professor de Costura" required>
+                </div>
+                <div class="form-group-reg">
                     <label for="first-reg-senha">Senha de Acesso</label>
                     <div class="input-password-wrapper">
                         <input type="password" id="first-reg-senha" class="form-control-reg" placeholder="Mínimo 8 caracteres" required style="padding-right: 48px;">
@@ -497,6 +505,15 @@
 
                         <div class="form-row">
                             <div class="form-group-boletim">
+                                <label for="boletim-escola">Escola / Unidade Relacionada: <span style="color: var(--accent-red);">*</span></label>
+                                <select id="boletim-escola" class="form-control" required style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    <!-- Options populated dynamically by JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group-boletim">
                                 <label for="boletim-curso">Curso/Turma:</label>
                                 <input type="text" id="boletim-curso" placeholder="ex: Costura Industrial A">
                             </div>
@@ -553,77 +570,287 @@
                             </div>
                         </div>
 
-                        <div class="boletim-section-title">3. Situação Identificada</div>
-                        <div class="checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-situacao" value="Material faltando"> Material faltando
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-situacao" value="Material danificado"> Material danificado
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-situacao" value="Quantidade divergente"> Quantidade divergente
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-situacao" value="Não devolvido"> Não devolvido
-                            </label>
-                            <label class="checkbox-label" style="display:flex; align-items:center; gap:5px; width:100%;">
-                                <input type="checkbox" name="boletim-situacao" value="Outro" id="boletim-sit-outro-check"> Outro:
-                                <input type="text" id="boletim-situacao-outro" style="flex-grow:1;" placeholder="especifique">
-                            </label>
+                        <!-- DYNAMIC SPECIFIC QUESTIONS SECTION -->
+                        <div id="boletim-campos-dinamicos" style="margin-top: 25px;">
+                            
+                            <!-- ROUBO FIELDS -->
+                            <div id="boletim-campos-roubo" class="category-fields-block" style="display: none;">
+                                <div class="boletim-section-title">Detalhamento de Roubo (Material subtraído mediante ameaça/violência)</div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-roubo-hora">Horário aproximado do ocorrido: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="time" id="boletim-roubo-hora" class="form-control" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-roubo-local">Local específico da ocorrência: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="text" id="boletim-roubo-local" placeholder="Ex: Armário de ferramentas do Lab 1">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-roubo-violencia">Houve arrombamento ou violência física? <span style="color: var(--accent-red);">*</span></label>
+                                        <select id="boletim-roubo-violencia" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                            <option value="Não">Não</option>
+                                            <option value="Sim (arrombamento)">Sim, arrombamento de portas/cadeados</option>
+                                            <option value="Sim (violência física/ameaça)">Sim, ameaça verbal ou violência física</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-roubo-boletim-policial">Boletim de Ocorrência Policial registrado? <span style="color: var(--accent-red);">*</span></label>
+                                        <select id="boletim-roubo-boletim-policial" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                            <option value="Não">Não</option>
+                                            <option value="Sim">Sim</option>
+                                            <option value="Em andamento">Em andamento / Solicitado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-roubo-materiais">Especificação de materiais e quantidades subtraídas: <span style="color: var(--accent-red);">*</span></label>
+                                        <textarea id="boletim-roubo-materiais" placeholder="Descreva os itens e quantidades roubadas..." style="height: 80px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-roubo-suspeitos">Suspeitos ou envolvidos identificados (se houver):</label>
+                                        <input type="text" id="boletim-roubo-suspeitos" placeholder="Ex: Nome de alunos ou terceiros avistados">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- FURTO FIELDS -->
+                            <div id="boletim-campos-furto" class="category-fields-block" style="display: none;">
+                                <div class="boletim-section-title">Detalhamento de Furto (Material desaparecido sem violência)</div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-furto-data-hora">Período/Data aproximada do desaparecimento: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="text" id="boletim-furto-data-hora" placeholder="Ex: Entre a aula da manhã e da noite do dia 14/06">
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-furto-ultimo-local">Último local visto: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="text" id="boletim-furto-ultimo-local" placeholder="Ex: Prateleira 2 do Almoxarifado">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-furto-arrombamento">Há indícios de violação de armários, gavetas ou portas? <span style="color: var(--accent-red);">*</span></label>
+                                        <select id="boletim-furto-arrombamento" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                            <option value="Não">Não, armários abertos ou sem chave</option>
+                                            <option value="Sim">Sim, gaveta forçada / porta destrancada</option>
+                                            <option value="Não aplicável">Não aplicável</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-furto-materiais">Especificação de materiais e quantidades furtadas: <span style="color: var(--accent-red);">*</span></label>
+                                        <textarea id="boletim-furto-materiais" placeholder="Descreva os itens e quantidades que desapareceram..." style="height: 80px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AVARIA FIELDS -->
+                            <div id="boletim-campos-avaria" class="category-fields-block" style="display: none;">
+                                <div class="boletim-section-title">Detalhamento de Avaria (Material danificado/quebrado)</div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-avaria-tipo">Tipo de Avaria identificado: <span style="color: var(--accent-red);">*</span></label>
+                                        <select id="boletim-avaria-tipo" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                            <option value="Quebra física">Quebra física (tesoura quebrada, régua trincada)</option>
+                                            <option value="Rasgo/Avaria de Tecido">Rasgo ou mancha severa em rolo de tecido</option>
+                                            <option value="Falha mecânica/elétrica">Falha mecânica/elétrica de máquina</option>
+                                            <option value="Dano químico">Dano químico / Queimadura</option>
+                                            <option value="Outros danos">Outro tipo de dano</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-avaria-gravidade">Gravidade da avaria: <span style="color: var(--accent-red);">*</span></label>
+                                        <select id="boletim-avaria-gravidade" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                            <option value="Parcial (Consertável)">Parcial (Consertável / Recuperável)</option>
+                                            <option value="Total (Inutilizável)">Total (Inutilizável / Necessário Descarte)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-avaria-utilizavel">O material ainda pode ser utilizado em aula? <span style="color: var(--accent-red);">*</span></label>
+                                        <select id="boletim-avaria-utilizavel" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                            <option value="Não">Não</option>
+                                            <option value="Sim, com restrições">Sim, com restrições</option>
+                                            <option value="Sim, normalmente">Sim, normalmente</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-avaria-responsavel">Nome do aluno ou professor responsável pela avaria:</label>
+                                        <input type="text" id="boletim-avaria-responsavel" placeholder="Ex: Aluno João da Silva ou Ninguém Identificado">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-avaria-causa">Causa provável ou descrição da avaria: <span style="color: var(--accent-red);">*</span></label>
+                                        <textarea id="boletim-avaria-causa" placeholder="Descreva como ocorreu o dano..." style="height: 80px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- EXTRAVIO FIELDS -->
+                            <div id="boletim-campos-extravio" class="category-fields-block" style="display: none;">
+                                <div class="boletim-section-title">Detalhamento de Extravio (Material perdido ou não localizado)</div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-extravio-data">Data em que foi sentida a falta do material: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="date" id="boletim-extravio-data" class="form-control" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-extravio-local-provavel">Local provável de perda: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="text" id="boletim-extravio-local-provavel" placeholder="Ex: Sala de modelagem / Área de corte">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-extravio-buscas">Esforços de busca já realizados no laboratório: <span style="color: var(--accent-red);">*</span></label>
+                                        <textarea id="boletim-extravio-buscas" placeholder="Descreva quais armários, laboratórios ou salas foram inspecionadas..." style="height: 80px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-extravio-materiais">Especificação de materiais e quantidades perdidas: <span style="color: var(--accent-red);">*</span></label>
+                                        <textarea id="boletim-extravio-materiais" placeholder="Descreva os itens e quantidades não localizados..." style="height: 80px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PRODUTO NÃO DEVOLVIDO FIELDS -->
+                            <div id="boletim-campos-naodevolvido" class="category-fields-block" style="display: none;">
+                                <div class="boletim-section-title">Detalhamento de Produto Não Devolvido</div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-naodevolvido-aluno">Responsável pela retirada: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="text" id="boletim-naodevolvido-aluno" placeholder="Ex: Aluno Pedro Santos ou Turma A">
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-naodevolvido-prazo">Data de retirada / Prazo de devolução original: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="text" id="boletim-naodevolvido-prazo" placeholder="Ex: Retirada 12/06 - Prazo 14/06">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-naodevolvido-justificativa">Justificativa apresentada pelo responsável (se houver):</label>
+                                        <textarea id="boletim-naodevolvido-justificativa" placeholder="Ex: Afirma que deixou em outro armário ou esqueceu em casa..." style="height: 80px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-naodevolvido-materiais">Materiais e quantidades pendentes de devolução: <span style="color: var(--accent-red);">*</span></label>
+                                        <textarea id="boletim-naodevolvido-materiais" placeholder="Descreva as ferramentas ou tecidos não devolvidos..." style="height: 80px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- DIVERGÊNCIA DE ESTOQUE FIELDS -->
+                            <div id="boletim-campos-divergencia" class="category-fields-block" style="display: none;">
+                                <div class="boletim-section-title">Detalhamento de Divergência de Estoque</div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-divergencia-prevista">Qtd. Prevista no Sistema: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="number" id="boletim-divergencia-prevista" placeholder="Qtd esperada no sistema" min="0" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-divergencia-real">Qtd. Física Real Encontrada: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="number" id="boletim-divergencia-real" placeholder="Qtd contada fisicamente" min="0" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-divergencia-diferenca">Diferença Identificada:</label>
+                                        <input type="number" id="boletim-divergencia-diferenca" placeholder="0" readonly style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-divergencia-responsavel">Responsável pela contagem física: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="text" id="boletim-divergencia-responsavel" placeholder="Ex: Prof(a). Carol">
+                                    </div>
+                                    <div class="form-group-boletim">
+                                        <label for="boletim-divergencia-data-contagem">Data da contagem física: <span style="color: var(--accent-red);">*</span></label>
+                                        <input type="date" id="boletim-divergencia-data-contagem" class="form-control" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="boletim-section-title">4. Quantidade</div>
-                        <div class="form-row">
-                            <div class="form-group-boletim">
-                                <label for="boletim-qtd-prevista">Qtd. Prevista:</label>
-                                <input type="text" id="boletim-qtd-prevista" placeholder="0">
+                        <!-- GENERIC / BACKUP FIELDS (Used for 'outros' or as fallback) -->
+                        <div id="boletim-campos-genericos" style="display: none; margin-top: 20px;">
+                            <div class="boletim-section-title">3. Situação Identificada</div>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-situacao" value="Material faltando"> Material faltando
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-situacao" value="Material danificado"> Material danificado
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-situacao" value="Quantidade divergente"> Quantidade divergente
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-situacao" value="Não devolvido"> Não devolvido
+                                </label>
+                                <label class="checkbox-label" style="display:flex; align-items:center; gap:5px; width:100%;">
+                                    <input type="checkbox" name="boletim-situacao" value="Outro" id="boletim-sit-outro-check"> Outro:
+                                    <input type="text" id="boletim-situacao-outro" style="flex-grow:1;" placeholder="especifique">
+                                </label>
                             </div>
-                            <div class="form-group-boletim">
-                                <label for="boletim-qtd-encontrada">Qtd. Encontrada:</label>
-                                <input type="text" id="boletim-qtd-encontrada" placeholder="0">
+
+                            <div class="boletim-section-title">4. Quantidade</div>
+                            <div class="form-row">
+                                <div class="form-group-boletim">
+                                    <label for="boletim-qtd-prevista">Qtd. Prevista:</label>
+                                    <input type="text" id="boletim-qtd-prevista" placeholder="0">
+                                </div>
+                                <div class="form-group-boletim">
+                                    <label for="boletim-qtd-encontrada">Qtd. Encontrada:</label>
+                                    <input type="text" id="boletim-qtd-encontrada" placeholder="0">
+                                </div>
+                                <div class="form-group-boletim">
+                                    <label for="boletim-qtd-diferenca">Diferença:</label>
+                                    <input type="text" id="boletim-qtd-diferenca" placeholder="0" readonly>
+                                </div>
                             </div>
-                            <div class="form-group-boletim">
-                                <label for="boletim-qtd-diferenca">Diferença:</label>
-                                <input type="text" id="boletim-qtd-diferenca" placeholder="0" readonly>
+
+                            <div class="boletim-section-title">5. Responsáveis (Se Identificado)</div>
+                            <div class="form-row">
+                                <div class="form-group-boletim">
+                                    <label for="boletim-aluno">Nome do aluno/grupo:</label>
+                                    <input type="text" id="boletim-aluno" placeholder="Nome dos alunos envolvidos">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group-boletim">
+                                    <label for="boletim-obs">Observação:</label>
+                                    <input type="text" id="boletim-obs" placeholder="Algum outro detalhe importante...">
+                                </div>
+                            </div>
+
+                            <div class="boletim-section-title">6. Medidas Adotadas</div>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-medidas" value="Comunicação ao professor"> Comunicação ao professor
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-medidas" value="Registro em controle"> Registro em controle
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-medidas" value="Reposição solicitada"> Reposição solicitada
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="boletim-medidas" value="Orientação aos alunos"> Orientação aos alunos
+                                </label>
+                                <label class="checkbox-label" style="display:flex; align-items:center; gap:5px; width:100%;">
+                                    <input type="checkbox" name="boletim-medidas" value="Outro" id="boletim-medida-outro-check"> Outro:
+                                    <input type="text" id="boletim-medida-outro" style="flex-grow:1;" placeholder="especifique">
+                                </label>
                             </div>
                         </div>
 
-                        <div class="boletim-section-title">5. Responsáveis (Se Identificado)</div>
-                        <div class="form-row">
-                            <div class="form-group-boletim">
-                                <label for="boletim-aluno">Nome do aluno/grupo:</label>
-                                <input type="text" id="boletim-aluno" placeholder="Nome dos alunos envolvidos">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group-boletim">
-                                <label for="boletim-obs">Observação:</label>
-                                <input type="text" id="boletim-obs" placeholder="Algum outro detalhe importante...">
-                            </div>
-                        </div>
-
-                        <div class="boletim-section-title">6. Medidas Adotadas</div>
-                        <div class="checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-medidas" value="Comunicação ao professor"> Comunicação ao professor
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-medidas" value="Registro em controle"> Registro em controle
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-medidas" value="Reposição solicitada"> Reposição solicitada
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="boletim-medidas" value="Orientação aos alunos"> Orientação aos alunos
-                            </label>
-                            <label class="checkbox-label" style="display:flex; align-items:center; gap:5px; width:100%;">
-                                <input type="checkbox" name="boletim-medidas" value="Outro" id="boletim-medida-outro-check"> Outro:
-                                <input type="text" id="boletim-medida-outro" style="flex-grow:1;" placeholder="especifique">
-                            </label>
-                        </div>
-
-                        <div class="boletim-section-title">7. Observações Gerais</div>
+                        <div class="boletim-section-title">3. Observações Gerais</div>
                         <div class="form-row">
                             <div class="form-group-boletim">
                                 <textarea id="boletim-obs-gerais" placeholder="Insira quaisquer outras observações relevantes..."></textarea>
@@ -684,64 +911,117 @@
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Senha de Cadastro:</strong> <span id="display-user-senha">-</span></div>
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Data de Nascimento:</strong> <span id="display-user-nascimento">-</span></div>
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Endereço:</strong> <span id="display-user-address">-</span></div>
+                                 <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Instituição:</strong> <span id="display-user-instituicao">-</span></div>
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Cargo:</strong> <span id="display-user-role">-</span></div>
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Turma Responsável:</strong> <span id="display-user-class">-</span></div>
                              </div>
                         </div>
 
-                        <!-- Right Column: Interactive Profile Details Form -->
+                        <!-- Right Column: Interactive Profile Details Card with visual and edit states -->
                         <div class="perfil-card profile-details-card">
-                            <h3 class="editor-section-title">Dados do Perfil</h3>
-                            <p class="editor-section-subtitle">Mantenha seus dados essenciais atualizados para o sistema:</p>
-                            
-                            <form id="profile-details-form">
-                                <div class="form-group-reg">
-                                    <label for="profile-name">Nome Completo</label>
-                                    <input type="text" id="profile-name" class="form-control-reg" required>
-                                </div>
-                                <div class="form-group-reg">
-                                    <label for="profile-phone">Telefone / WhatsApp</label>
-                                    <input type="text" id="profile-phone" class="form-control-reg" placeholder="Ex: (11) 99999-9999" required>
-                                </div>
-                                <div class="form-group-reg">
-                                    <label for="profile-email">E-mail de Cadastro</label>
-                                    <input type="email" id="profile-email" class="form-control-reg" required>
-                                </div>
-                                <div class="form-group-reg">
-                                    <label for="profile-nascimento">Data de Nascimento</label>
-                                    <input type="date" id="profile-nascimento" class="form-control-reg" required>
-                                </div>
-                                <div class="form-group-reg">
-                                    <label for="profile-senha">Senha de Cadastro</label>
-                                    <input type="password" id="profile-senha" class="form-control-reg" placeholder="Digite uma nova senha se quiser alterar" required>
-                                </div>
-                                <div class="form-group-reg">
-                                    <label for="profile-address">Endereço</label>
-                                    <input type="text" id="profile-address" class="form-control-reg" placeholder="Rua, número, bairro, cidade">
-                                </div>
-                                <div class="form-group-reg">
-                                    <label for="profile-role">Cargo / Função</label>
-                                    <input type="text" id="profile-role" class="form-control-reg" placeholder="Ex: Professora de Modelagem, Coordenadora, etc.">
-                                </div>
-                                <div class="form-group-reg">
-                                    <label for="profile-class">Turma(s) sob sua Responsabilidade</label>
-                                    <input type="text" id="profile-class" class="form-control-reg" placeholder="Ex: Costura Industrial A, Modelagem de Vestuário B">
-                                </div>
-
-                                <!-- Gemini API Key configuration field -->
-                                <div class="form-group-reg" style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                                    <label for="profile-gemini-key" style="color: var(--accent-green);">Chave de API do Google Gemini (IA)</label>
-                                    <input type="password" id="profile-gemini-key" class="form-control-reg" placeholder="Cole sua API Key do Google AI Studio">
-                                    <div class="cadastro-subtext-reg" style="color: var(--text-muted);">
-                                        * Insira uma chave de API para que o Chatbot do assistente virtual responda suas dúvidas de forma automática e inteligente. Caso deixe em branco, o chatbot funcionará no modo offline padrão.
+                            <!-- VISUAL MODE (Default) -->
+                            <div id="profile-view-mode" style="width: 100%;">
+                                <h3 class="editor-section-title">Dados do Perfil</h3>
+                                <p class="editor-section-subtitle">Informações cadastradas no sistema:</p>
+                                
+                                <div class="profile-info-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px;">
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Nome Completo</label>
+                                        <span id="view-profile-name" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
+                                    </div>
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">E-mail</label>
+                                        <span id="view-profile-email" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
+                                    </div>
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Telefone</label>
+                                        <span id="view-profile-phone" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
+                                    </div>
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Instituição</label>
+                                        <span id="view-profile-instituicao" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
+                                    </div>
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Cargo ou Função</label>
+                                        <span id="view-profile-role" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
+                                    </div>
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Data de Nascimento</label>
+                                        <span id="view-profile-nascimento" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
+                                    </div>
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Endereço</label>
+                                        <span id="view-profile-address" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
+                                    </div>
+                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Turma(s) Responsável</label>
+                                        <span id="view-profile-class" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
                                     </div>
                                 </div>
+                                
+                                <button type="button" class="btn-save-avatar" id="btn-edit-profile" style="margin-top: 25px; background: linear-gradient(135deg, var(--primary-beige), #bca48a);">Editar Informações</button>
+                            </div>
 
-                                <button type="submit" class="btn-save-avatar" id="btn-save-profile">Salvar Informações</button>
-                            </form>
+                            <!-- EDIT MODE (Hidden by default) -->
+                            <div id="profile-edit-mode" style="display: none; width: 100%;">
+                                <h3 class="editor-section-title">Editar Perfil</h3>
+                                <p class="editor-section-subtitle">Modifique suas informações e clique em salvar:</p>
+                                
+                                <form id="profile-details-form">
+                                    <div class="form-group-reg">
+                                        <label for="profile-name">Nome Completo</label>
+                                        <input type="text" id="profile-name" class="form-control-reg" required>
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-phone">Telefone / WhatsApp</label>
+                                        <input type="text" id="profile-phone" class="form-control-reg" placeholder="Ex: (11) 99999-9999" required>
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-email">E-mail de Cadastro</label>
+                                        <input type="email" id="profile-email" class="form-control-reg" required>
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-instituicao">Instituição / Escola</label>
+                                        <input type="text" id="profile-instituicao" class="form-control-reg" placeholder="Ex: SENAI Primavera" required>
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-role">Cargo / Função</label>
+                                        <input type="text" id="profile-role" class="form-control-reg" placeholder="Ex: Professor de Costura" required>
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-nascimento">Data de Nascimento</label>
+                                        <input type="date" id="profile-nascimento" class="form-control-reg" required>
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-senha">Senha de Cadastro</label>
+                                        <input type="password" id="profile-senha" class="form-control-reg" placeholder="Digite uma nova senha se quiser alterar" required>
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-address">Endereço</label>
+                                        <input type="text" id="profile-address" class="form-control-reg" placeholder="Rua, número, bairro, cidade">
+                                    </div>
+                                    <div class="form-group-reg">
+                                        <label for="profile-class">Turma(s) sob sua Responsabilidade</label>
+                                        <input type="text" id="profile-class" class="form-control-reg" placeholder="Ex: Costura Industrial A, Modelagem de Vestuário B">
+                                    </div>
+
+                                    <!-- Gemini API Key configuration field -->
+                                    <div class="form-group-reg" style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                                        <label for="profile-gemini-key" style="color: var(--accent-green);">Chave de API do Google Gemini (IA)</label>
+                                        <input type="password" id="profile-gemini-key" class="form-control-reg" placeholder="Cole sua API Key do Google AI Studio">
+                                        <div class="cadastro-subtext-reg" style="color: var(--text-muted);">
+                                            * Insira uma chave de API para que o Chatbot do assistente virtual responda suas dúvidas de forma automática e inteligente. Caso deixe em branco, o chatbot funcionará no modo offline padrão.
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                        <button type="submit" class="btn-save-avatar" id="btn-save-profile" style="flex: 1;">Salvar Alterações</button>
+                                        <button type="button" class="btn-cancel-boletim" id="btn-cancel-edit-profile" style="flex: 1; margin: 0; padding: 12px;">Cancelar</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
             </section>
 
             <!-- OCORRÊNCIAS SECTION (TAB) -->

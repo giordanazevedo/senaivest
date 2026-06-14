@@ -458,6 +458,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = document.getElementById('first-reg-email').value.trim();
             const telefone = document.getElementById('first-reg-telefone').value.trim();
             const nascimento = document.getElementById('first-reg-nascimento').value;
+            const instituicao = document.getElementById('first-reg-instituicao').value.trim();
+            const cargo = document.getElementById('first-reg-cargo').value.trim();
             const senha = document.getElementById('first-reg-senha').value;
 
             // Password validation
@@ -477,7 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 password: senha,
                 phone: telefone,
                 nascimento: nascimento,
-                role: 'Docente',
+                role: cargo,
+                instituicao: instituicao,
                 address: '',
                 responsibleClass: '',
                 avatarType: 'default',
@@ -690,6 +693,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Toggle Profile View/Edit Modes
+    const btnEditProfile = document.getElementById('btn-edit-profile');
+    const btnCancelEditProfile = document.getElementById('btn-cancel-edit-profile');
+    const profileViewModeDiv = document.getElementById('profile-view-mode');
+    const profileEditModeDiv = document.getElementById('profile-edit-mode');
+
+    if (btnEditProfile) {
+        btnEditProfile.addEventListener('click', () => {
+            if (profileViewModeDiv) profileViewModeDiv.style.display = 'none';
+            if (profileEditModeDiv) profileEditModeDiv.style.display = 'block';
+        });
+    }
+
+    if (btnCancelEditProfile) {
+        btnCancelEditProfile.addEventListener('click', () => {
+            if (profileViewModeDiv) profileViewModeDiv.style.display = 'block';
+            if (profileEditModeDiv) profileEditModeDiv.style.display = 'none';
+        });
+    }
+
     // Handle Profile Details Form Submission
     const profileDetailsForm = document.getElementById('profile-details-form');
     if (profileDetailsForm) {
@@ -718,6 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 user.address = document.getElementById('profile-address').value.trim();
+                user.instituicao = document.getElementById('profile-instituicao').value.trim();
                 user.role = document.getElementById('profile-role').value.trim();
                 user.responsibleClass = document.getElementById('profile-class').value.trim();
                 
@@ -729,6 +753,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('gemini_api_key');
                 }
                 
+                const toggleBackToView = () => {
+                    if (profileViewModeDiv) profileViewModeDiv.style.display = 'block';
+                    if (profileEditModeDiv) profileEditModeDiv.style.display = 'none';
+                };
+
                 // Call API
                 fetch('/api/update', {
                     method: 'POST',
@@ -741,6 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem('registeredUser', JSON.stringify(data.user));
                         updateUserUI(data.user);
                         showToast('Informações do perfil atualizadas!', 'success');
+                        toggleBackToView();
                     } else {
                         showToast(data.error || 'Erro ao atualizar dados.', 'error');
                     }
@@ -750,6 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('registeredUser', JSON.stringify(user));
                     updateUserUI(user);
                     showToast('Informações do perfil atualizadas (Modo Local)!', 'success');
+                    toggleBackToView();
                 });
             }
         });
@@ -862,8 +893,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const enc = parseInt(inputEncontrada.value) || 0;
         inputDiferenca.value = Math.abs(prev - enc);
     };
-    inputPrevista.addEventListener('input', calculateDiff);
-    inputEncontrada.addEventListener('input', calculateDiff);
+    if (inputPrevista && inputEncontrada && inputDiferenca) {
+        inputPrevista.addEventListener('input', calculateDiff);
+        inputEncontrada.addEventListener('input', calculateDiff);
+    }
+
+    const inputPrevistaDiv = document.getElementById('boletim-divergencia-prevista');
+    const inputRealDiv = document.getElementById('boletim-divergencia-real');
+    const inputDiferencaDiv = document.getElementById('boletim-divergencia-diferenca');
+
+    const calculateDiffDiv = () => {
+        const prev = parseInt(inputPrevistaDiv.value) || 0;
+        const real = parseInt(inputRealDiv.value) || 0;
+        inputDiferencaDiv.value = Math.abs(prev - real);
+    };
+    if (inputPrevistaDiv && inputRealDiv && inputDiferencaDiv) {
+        inputPrevistaDiv.addEventListener('input', calculateDiffDiv);
+        inputRealDiv.addEventListener('input', calculateDiffDiv);
+    }
 
     // Wire up forms
     document.getElementById('boletim-form').addEventListener('submit', handleBoletimSubmit);
@@ -1212,6 +1259,7 @@ function handleBoletimSubmit(e) {
     const curso = document.getElementById('boletim-curso').value;
     const prof = document.getElementById('boletim-professor').value || 'Docente';
     const material = document.getElementById('boletim-material-nome').value;
+    const escolaCode = document.getElementById('boletim-escola').value;
     
     // Handle tipo radio
     const tipoRadio = document.querySelector('input[name="boletim-tipo"]:checked');
@@ -1223,52 +1271,119 @@ function handleBoletimSubmit(e) {
     
     const planoCodigo = document.getElementById('boletim-plano-codigo').value;
     const origem = document.getElementById('boletim-origem').value;
-    const descricao = document.getElementById('boletim-descricao').value;
-    
-    // Handle situacao checkboxes
-    const situacoesChecked = [];
-    document.querySelectorAll('input[name="boletim-situacao"]:checked').forEach(cb => {
-        if (cb.value === 'Outro') {
-            const outroTexto = document.getElementById('boletim-situacao-outro').value.trim();
-            if (outroTexto) {
-                situacoesChecked.push(outroTexto);
-            } else {
-                situacoesChecked.push('Outro');
-            }
-        } else {
-            situacoesChecked.push(cb.value);
-        }
-    });
-    const situacao = situacoesChecked.join(', ');
-    
-    const qtdPrevista = document.getElementById('boletim-qtd-prevista').value;
-    const qtdEncontrada = document.getElementById('boletim-qtd-encontrada').value;
-    const qtdDiferenca = document.getElementById('boletim-qtd-diferenca').value;
-    const aluno = document.getElementById('boletim-aluno').value;
-    
-    // Observacao responsavel + observacoes gerais
-    const obsResponsavel = document.getElementById('boletim-obs').value.trim();
     const obsGerais = document.getElementById('boletim-obs-gerais').value.trim();
-    let observacoes = obsGerais;
-    if (obsResponsavel) {
-        observacoes = obsResponsavel + (obsGerais ? ' | ' + obsGerais : '');
-    }
     
-    // Handle medidas checkboxes
-    const medidasChecked = [];
-    document.querySelectorAll('input[name="boletim-medidas"]:checked').forEach(cb => {
-        if (cb.value === 'Outro') {
-            const outroTexto = document.getElementById('boletim-medida-outro').value.trim();
-            if (outroTexto) {
-                medidasChecked.push(outroTexto);
+    const cat = document.getElementById('boletim-categoria-selecionada').value || 'outros';
+    const detalhesCategoria = {};
+    
+    let finalDescricao = '';
+    let finalSituacao = '';
+    let finalQtdPrevista = '0';
+    let finalQtdEncontrada = '0';
+    let finalQtdDiferenca = '0';
+    let finalAluno = 'Não identificado';
+    let finalMedidas = 'Nenhuma registrada';
+    let finalObservacoes = obsGerais || 'Nenhuma';
+
+    if (cat === 'roubo') {
+        detalhesCategoria.hora = document.getElementById('boletim-roubo-hora').value;
+        detalhesCategoria.local = document.getElementById('boletim-roubo-local').value.trim();
+        detalhesCategoria.violencia = document.getElementById('boletim-roubo-violencia').value;
+        detalhesCategoria.boletimPolicial = document.getElementById('boletim-roubo-boletim-policial').value;
+        detalhesCategoria.materiais = document.getElementById('boletim-roubo-materiais').value.trim();
+        detalhesCategoria.suspeitos = document.getElementById('boletim-roubo-suspeitos').value.trim();
+        
+        finalDescricao = `🚨 Roubo de material ocorrido aproximadamente às ${detalhesCategoria.hora} no local: ${detalhesCategoria.local}.\nHouve arrombamento/violência: ${detalhesCategoria.violencia}.\nItens subtraídos: ${detalhesCategoria.materiais}`;
+        finalSituacao = 'Roubo / Ameaça / Violência';
+        finalAluno = detalhesCategoria.suspeitos || 'Não identificado';
+        finalObservacoes = `Boletim Policial: ${detalhesCategoria.boletimPolicial}` + (obsGerais ? ' | ' + obsGerais : '');
+    } else if (cat === 'furto') {
+        detalhesCategoria.dataHora = document.getElementById('boletim-furto-data-hora').value.trim();
+        detalhesCategoria.ultimoLocal = document.getElementById('boletim-furto-ultimo-local').value.trim();
+        detalhesCategoria.arrombamento = document.getElementById('boletim-furto-arrombamento').value;
+        detalhesCategoria.materiais = document.getElementById('boletim-furto-materiais').value.trim();
+        
+        finalDescricao = `🕵️ Furto de material. Período estimado: ${detalhesCategoria.dataHora}. Último local visto: ${detalhesCategoria.ultimoLocal}.\nIndícios de arrombamento/violação: ${detalhesCategoria.arrombamento}.\nItens desaparecidos: ${detalhesCategoria.materiais}`;
+        finalSituacao = 'Furto (desaparecimento sem violência)';
+        finalObservacoes = `Indícios de violação: ${detalhesCategoria.arrombamento}` + (obsGerais ? ' | ' + obsGerais : '');
+    } else if (cat === 'avaria') {
+        detalhesCategoria.tipoAvaria = document.getElementById('boletim-avaria-tipo').value;
+        detalhesCategoria.gravidade = document.getElementById('boletim-avaria-gravidade').value;
+        detalhesCategoria.utilizavel = document.getElementById('boletim-avaria-utilizavel').value;
+        detalhesCategoria.causa = document.getElementById('boletim-avaria-causa').value.trim();
+        detalhesCategoria.responsavel = document.getElementById('boletim-avaria-responsavel').value.trim();
+        
+        finalDescricao = `⚠️ Avaria constatada: ${detalhesCategoria.tipoAvaria}.\nGravidade: ${detalhesCategoria.gravidade}.\nO material ainda está utilizável? ${detalhesCategoria.utilizavel}.\nDescrição do dano/causa: ${detalhesCategoria.causa}`;
+        finalSituacao = 'Material danificado';
+        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
+        finalObservacoes = `Tipo: ${detalhesCategoria.tipoAvaria} | Gravidade: ${detalhesCategoria.gravidade}` + (obsGerais ? ' | ' + obsGerais : '');
+    } else if (cat === 'extravio') {
+        detalhesCategoria.dataExtravio = document.getElementById('boletim-extravio-data').value;
+        detalhesCategoria.localProvavel = document.getElementById('boletim-extravio-local-provavel').value.trim();
+        detalhesCategoria.buscas = document.getElementById('boletim-extravio-buscas').value.trim();
+        detalhesCategoria.materiais = document.getElementById('boletim-extravio-materiais').value.trim();
+        
+        finalDescricao = `🔍 Extravio constatado em ${detalhesCategoria.dataExtravio}. Local provável da perda: ${detalhesCategoria.localProvavel}.\nBuscas realizadas: ${detalhesCategoria.buscas}.\nItens perdidos: ${detalhesCategoria.materiais}`;
+        finalSituacao = 'Material extraviado / Perdido';
+        finalObservacoes = `Buscas realizadas: ${detalhesCategoria.buscas}` + (obsGerais ? ' | ' + obsGerais : '');
+    } else if (cat === 'naodevolvido') {
+        detalhesCategoria.responsavel = document.getElementById('boletim-naodevolvido-aluno').value.trim();
+        detalhesCategoria.prazo = document.getElementById('boletim-naodevolvido-prazo').value.trim();
+        detalhesCategoria.justificativa = document.getElementById('boletim-naodevolvido-justificativa').value.trim();
+        detalhesCategoria.materiais = document.getElementById('boletim-naodevolvido-materiais').value.trim();
+        
+        finalDescricao = `⏳ Produto não devolvido por ${detalhesCategoria.responsavel}.\nPrazo/Retirada: ${detalhesCategoria.prazo}.\nJustificativa: ${detalhesCategoria.justificativa}.\nItens pendentes: ${detalhesCategoria.materiais}`;
+        finalSituacao = 'Não devolvido no prazo';
+        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
+        finalObservacoes = `Justificativa: ${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
+    } else if (cat === 'divergencia') {
+        detalhesCategoria.qtdPrevista = document.getElementById('boletim-divergencia-prevista').value;
+        detalhesCategoria.qtdReal = document.getElementById('boletim-divergencia-real').value;
+        detalhesCategoria.qtdDiferenca = document.getElementById('boletim-divergencia-diferenca').value;
+        detalhesCategoria.responsavel = document.getElementById('boletim-divergencia-responsavel').value.trim();
+        detalhesCategoria.dataContagem = document.getElementById('boletim-divergencia-data-contagem').value;
+        
+        finalDescricao = `📊 Divergência quantitativa de estoque identificada na contagem de ${detalhesCategoria.dataContagem} por ${detalhesCategoria.responsavel}.\nQuantidade esperada: ${detalhesCategoria.qtdPrevista} | Quantidade real: ${detalhesCategoria.qtdReal} | Diferença: ${detalhesCategoria.qtdDiferenca}`;
+        finalSituacao = 'Divergência de estoque';
+        finalQtdPrevista = detalhesCategoria.qtdPrevista || '0';
+        finalQtdEncontrada = detalhesCategoria.qtdReal || '0';
+        finalQtdDiferenca = detalhesCategoria.qtdDiferenca || '0';
+        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
+        finalObservacoes = `Contagem em ${detalhesCategoria.dataContagem}` + (obsGerais ? ' | ' + obsGerais : '');
+    } else {
+        // Fallback or "outros"
+        finalDescricao = document.getElementById('boletim-descricao').value;
+        
+        const situacoesChecked = [];
+        document.querySelectorAll('input[name="boletim-situacao"]:checked').forEach(cb => {
+            if (cb.value === 'Outro') {
+                const outroTexto = document.getElementById('boletim-situacao-outro').value.trim();
+                situacoesChecked.push(outroTexto || 'Outro');
             } else {
-                medidasChecked.push('Outro');
+                situacoesChecked.push(cb.value);
             }
-        } else {
-            medidasChecked.push(cb.value);
-        }
-    });
-    const medidas = medidasChecked.join(', ');
+        });
+        finalSituacao = situacoesChecked.join(', ') || 'Nenhuma especificada';
+        
+        finalQtdPrevista = document.getElementById('boletim-qtd-prevista').value || '0';
+        finalQtdEncontrada = document.getElementById('boletim-qtd-encontrada').value || '0';
+        finalQtdDiferenca = document.getElementById('boletim-qtd-diferenca').value || '0';
+        finalAluno = document.getElementById('boletim-aluno').value || 'Não identificado';
+        
+        const obsResponsavel = document.getElementById('boletim-obs').value.trim();
+        finalObservacoes = obsResponsavel ? (obsResponsavel + (obsGerais ? ' | ' + obsGerais : '')) : (obsGerais || 'Nenhuma');
+        
+        const medidasChecked = [];
+        document.querySelectorAll('input[name="boletim-medidas"]:checked').forEach(cb => {
+            if (cb.value === 'Outro') {
+                const outroTexto = document.getElementById('boletim-medida-outro').value.trim();
+                medidasChecked.push(outroTexto || 'Outro');
+            } else {
+                medidasChecked.push(cb.value);
+            }
+        });
+        finalMedidas = medidasChecked.join(', ') || 'Nenhuma registrada';
+    }
 
     const registeredUserStr = localStorage.getItem('registeredUser');
     let currentUserEmail = 'geovana@senai.br';
@@ -1288,17 +1403,19 @@ function handleBoletimSubmit(e) {
         tipo: tipo,
         planoCodigo: planoCodigo,
         origem: origem,
-        descricao: descricao,
-        situacao: situacao || 'Nenhuma especificada',
-        qtdPrevista: qtdPrevista,
-        qtdEncontrada: qtdEncontrada,
-        qtdDiferenca: qtdDiferenca,
-        aluno: aluno || 'Não identificado',
-        observacoes: observacoes || 'Nenhuma',
-        medidas: medidas || 'Nenhuma registrada',
+        descricao: finalDescricao,
+        situacao: finalSituacao,
+        qtdPrevista: finalQtdPrevista,
+        qtdEncontrada: finalQtdEncontrada,
+        qtdDiferenca: finalQtdDiferenca,
+        aluno: finalAluno,
+        observacoes: finalObservacoes,
+        medidas: finalMedidas,
         status: 'Registrado',
         createdBy: currentUserEmail,
-        categoria: document.getElementById('boletim-categoria-selecionada').value || 'outros'
+        categoria: cat,
+        escolaCode: escolaCode,
+        detalhesCategoria: detalhesCategoria
     };
 
     registeredBoletins.push(newBoletim);
@@ -1310,8 +1427,8 @@ function handleBoletimSubmit(e) {
     // Trigger warning notification in system
     addNotification('warning', `Alerta de Ocorrência: ${material}`, `Boletim ${codigo} registrado para o material "${material}".`);
 
-    // ★ Mensagem de sucesso personalizada
-    showToast('Seu boletim foi registrado com sucesso e encaminhado para análise. Em breve a coordenação entrará em contato.', 'success');
+    // Mensagem de sucesso na tela
+    showToast('Boletim de ocorrência registrado com sucesso!', 'success');
     
     // Render the updated list
     renderRegisteredBoletins();
@@ -1325,18 +1442,45 @@ function handleBoletimSubmit(e) {
     
     updateDashboardStats();
 
-    // ★ Gerar PDF automaticamente e tentar enviar por e-mail
+    // Gerar PDF automaticamente e tentar enviar por e-mail
     const boletimId = newBoletim.id;
     setTimeout(() => {
         generateBoletimPDF(boletimId);
         sendBoletimByEmail(newBoletim);
     }, 500);
+
+    // Trigger Estela Virtual Assistant chat messages
+    setTimeout(() => {
+        const chatWindow = document.getElementById('assistant-chat-window');
+        if (chatWindow && !chatWindow.classList.contains('active')) {
+            chatWindow.classList.add('active');
+        }
+        
+        const schoolObj = registeredSchools.find(s => s.code === escolaCode);
+        const schoolName = schoolObj ? schoolObj.name : 'escola selecionada';
+        const coordinatorEmail = schoolObj ? schoolObj.coordinatorEmail : 'e-mail cadastrado';
+        
+        if (window.appendEstelaMessage) {
+            window.appendEstelaMessage("Seu boletim foi registrado com sucesso. O documento foi encaminhado para análise da coordenação responsável. Você será notificado sobre futuras atualizações.", false);
+            if (window.speakEstelaText) {
+                window.speakEstelaText("Seu boletim foi registrado com sucesso. O documento foi encaminhado para análise da coordenação responsável.");
+            }
+            
+            setTimeout(() => {
+                const followUpMsg = `O boletim está sendo encaminhado automaticamente para o e-mail da coordenação cadastrada da instituição (${schoolName}) em <strong>${coordinatorEmail}</strong>.`;
+                window.appendEstelaMessage(followUpMsg, false);
+                if (window.speakEstelaText) {
+                    window.speakEstelaText(`O boletim está sendo encaminhado automaticamente para o e-mail da coordenação cadastrada da instituição, ${schoolName}.`);
+                }
+            }, 3000);
+        }
+    }, 1200);
     
     // Redirect to personal reports tab
     setTimeout(() => {
         switchTab('ocorrencias');
         switchOcorrenciasTab('minhas');
-    }, 2000);
+    }, 5000);
 }
 
 // HANDLE LESSON PLAN SUBMISSION
@@ -1794,17 +1938,29 @@ function updateUserUI(user) {
     // Display elements
     const displayPhone = document.getElementById('display-user-phone');
     const displayAddress = document.getElementById('display-user-address');
+    const displayInstituicao = document.getElementById('display-user-instituicao');
     const displayRole = document.getElementById('display-user-role');
     const displayClass = document.getElementById('display-user-class');
     const displayEmailField = document.getElementById('display-user-email-field');
     const displaySenha = document.getElementById('display-user-senha');
     const displayNascimento = document.getElementById('display-user-nascimento');
 
+    // Visual Mode elements
+    const viewName = document.getElementById('view-profile-name');
+    const viewEmail = document.getElementById('view-profile-email');
+    const viewPhone = document.getElementById('view-profile-phone');
+    const viewInstituicao = document.getElementById('view-profile-instituicao');
+    const viewRole = document.getElementById('view-profile-role');
+    const viewNascimento = document.getElementById('view-profile-nascimento');
+    const viewAddress = document.getElementById('view-profile-address');
+    const viewClass = document.getElementById('view-profile-class');
+
     // Form inputs
     const inputName = document.getElementById('profile-name');
     const inputPhone = document.getElementById('profile-phone');
     const inputEmail = document.getElementById('profile-email');
     const inputAddress = document.getElementById('profile-address');
+    const inputInstituicao = document.getElementById('profile-instituicao');
     const inputRole = document.getElementById('profile-role');
     const inputClass = document.getElementById('profile-class');
     const inputNascimento = document.getElementById('profile-nascimento');
@@ -1822,28 +1978,39 @@ function updateUserUI(user) {
 
     if (displayPhone) displayPhone.textContent = user.phone || 'Não informado';
     if (displayAddress) displayAddress.textContent = user.address || 'Não informado';
+    if (displayInstituicao) displayInstituicao.textContent = user.instituicao || 'Não informado';
     if (displayRole) displayRole.textContent = user.role || 'Não informado';
     if (displayClass) displayClass.textContent = user.responsibleClass || 'Nenhuma';
     if (displayEmailField) displayEmailField.textContent = user.email || 'Não informado';
     if (displaySenha) displaySenha.textContent = user.password || 'Não informado';
-    if (displayNascimento) {
-        if (user.nascimento) {
-            let dateObj = new Date(user.nascimento);
-            if (!isNaN(dateObj.getTime())) {
-                displayNascimento.textContent = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-            } else {
-                displayNascimento.textContent = user.nascimento;
-            }
+
+    let formattedNascimento = 'Não informado';
+    if (user.nascimento) {
+        let dateObj = new Date(user.nascimento);
+        if (!isNaN(dateObj.getTime())) {
+            formattedNascimento = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
         } else {
-            displayNascimento.textContent = 'Não informado';
+            formattedNascimento = user.nascimento;
         }
     }
+    if (displayNascimento) displayNascimento.textContent = formattedNascimento;
+
+    // Set Visual Mode elements
+    if (viewName) viewName.textContent = user.name || '-';
+    if (viewEmail) viewEmail.textContent = user.email || '-';
+    if (viewPhone) viewPhone.textContent = user.phone || '-';
+    if (viewInstituicao) viewInstituicao.textContent = user.instituicao || '-';
+    if (viewRole) viewRole.textContent = user.role || '-';
+    if (viewNascimento) viewNascimento.textContent = formattedNascimento;
+    if (viewAddress) viewAddress.textContent = user.address || '-';
+    if (viewClass) viewClass.textContent = user.responsibleClass || '-';
 
     // Set Form Values
     if (inputName) inputName.value = user.name || '';
     if (inputPhone) inputPhone.value = user.phone || '';
     if (inputEmail) inputEmail.value = user.email || '';
     if (inputAddress) inputAddress.value = user.address || '';
+    if (inputInstituicao) inputInstituicao.value = user.instituicao || '';
     if (inputRole) inputRole.value = user.role || '';
     if (inputClass) inputClass.value = user.responsibleClass || '';
     if (inputNascimento) inputNascimento.value = user.nascimento || '';
@@ -2144,6 +2311,10 @@ function initEstelaChatbot() {
             }
         });
     }
+
+    // Expose helpers globally for system-wide notifications
+    window.appendEstelaMessage = appendMessage;
+    window.speakEstelaText = speakText;
 }
 
 // --- BOLETINS DE OCORRÊNCIA REGISTRADOS & CODE AUTO-GENERATORS ---
@@ -2948,6 +3119,18 @@ const CATEGORY_MAP = {
     'outros':       { icon: '📝', label: 'Outros' }
 };
 
+function populateBoletimEscolaDropdown() {
+    const select = document.getElementById('boletim-escola');
+    if (!select) return;
+    select.innerHTML = '<option value="" disabled selected>Selecione a escola...</option>';
+    registeredSchools.forEach(school => {
+        const opt = document.createElement('option');
+        opt.value = school.code;
+        opt.textContent = school.name;
+        select.appendChild(opt);
+    });
+}
+
 function selectBoletimCategoria(cardEl) {
     const cat = cardEl.getAttribute('data-cat');
     const catInfo = CATEGORY_MAP[cat] || { icon: '📝', label: 'Outros' };
@@ -2958,6 +3141,28 @@ function selectBoletimCategoria(cardEl) {
     // Update badge in form header
     document.getElementById('boletim-badge-icon').textContent = catInfo.icon;
     document.getElementById('boletim-badge-label').textContent = catInfo.label;
+    
+    // Populate school select dropdown
+    populateBoletimEscolaDropdown();
+    
+    // Hide all specific category blocks
+    document.querySelectorAll('.category-fields-block').forEach(block => {
+        block.style.display = 'none';
+    });
+    
+    // Hide generic fields block
+    document.getElementById('boletim-campos-genericos').style.display = 'none';
+    
+    // Show specific category block
+    const specificBlock = document.getElementById('boletim-campos-' + cat);
+    if (specificBlock) {
+        specificBlock.style.display = 'block';
+    }
+    
+    // If "outros", show the generic fields container
+    if (cat === 'outros') {
+        document.getElementById('boletim-campos-genericos').style.display = 'block';
+    }
     
     // Hide category selector, show form
     document.getElementById('boletim-categoria-selector').style.display = 'none';
@@ -2972,6 +3177,12 @@ function voltarCategoriaBoletim() {
     document.getElementById('boletim-categoria-selector').style.display = '';
     document.getElementById('boletim-form').style.display = 'none';
     document.getElementById('boletim-categoria-selecionada').value = '';
+    
+    // Hide all dynamic blocks
+    document.querySelectorAll('.category-fields-block').forEach(block => {
+        block.style.display = 'none';
+    });
+    document.getElementById('boletim-campos-genericos').style.display = 'none';
 }
 
 // ======================================================
@@ -3066,6 +3277,10 @@ function generateBoletimPDF(boletimId) {
         addRow('Data:', b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : ''));
         addRow('Curso/Turma:', b.curso);
         addRow('Professor:', b.professor);
+        
+        const schoolObj = registeredSchools.find(s => s.code === b.escolaCode);
+        const schoolName = schoolObj ? schoolObj.name : 'N/A';
+        addRow('Escola/Unidade:', schoolName);
         y += 3;
         
         doc.setFont('helvetica', 'bold');
@@ -3093,10 +3308,57 @@ function generateBoletimPDF(boletimId) {
         doc.text(descLines, margin, y);
         y += descLines.length * 4.5 + 5;
         
+        // ─── CATEGORY-SPECIFIC DETAILS (IF ANY) ───
+        if (b.detalhesCategoria && Object.keys(b.detalhesCategoria).length > 0) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(211, 188, 162);
+            doc.text('PERGUNTAS ESPECÍFICAS DA CATEGORIA', margin, y);
+            y += 8;
+            
+            const det = b.detalhesCategoria;
+            if (b.categoria === 'roubo') {
+                addRow('Horário Roubo:', det.hora);
+                addRow('Local Ocorrência:', det.local);
+                addRow('Violência/Arrombamento:', det.violencia);
+                addRow('Boletim Policial:', det.boletimPolicial);
+                addRow('Materiais Subtraídos:', det.materiais);
+                addRow('Suspeitos:', det.suspeitos);
+            } else if (b.categoria === 'furto') {
+                addRow('Período aproximado:', det.dataHora);
+                addRow('Último local visto:', det.ultimoLocal);
+                addRow('Sinais violação:', det.arrombamento);
+                addRow('Materiais Furtados:', det.materiais);
+            } else if (b.categoria === 'avaria') {
+                addRow('Tipo de avaria:', det.tipoAvaria);
+                addRow('Gravidade:', det.gravidade);
+                addRow('Utilizável?', det.utilizavel);
+                addRow('Causa provável:', det.causa);
+                addRow('Responsável:', det.responsavel);
+            } else if (b.categoria === 'extravio') {
+                addRow('Data extravio:', det.dataExtravio);
+                addRow('Local provável:', det.localProvavel);
+                addRow('Buscas efetuadas:', det.buscas);
+                addRow('Materiais perdidos:', det.materiais);
+            } else if (b.categoria === 'naodevolvido') {
+                addRow('Responsável:', det.responsavel);
+                addRow('Prazo:', det.prazo);
+                addRow('Justificativa:', det.justificativa);
+                addRow('Materiais pendentes:', det.materiais);
+            } else if (b.categoria === 'divergencia') {
+                addRow('Qtd Prevista:', det.qtdPrevista);
+                addRow('Qtd Real física:', det.qtdReal);
+                addRow('Diferença:', det.qtdDiferenca, true);
+                addRow('Responsável contagem:', det.responsavel);
+                addRow('Data contagem:', det.dataContagem);
+            }
+            y += 5;
+        }
+
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('QUANTIDADES', margin, y);
+        doc.text('QUANTIDADES & DETALHES', margin, y);
         y += 8;
         
         addRow('Qtd. Prevista:', b.qtdPrevista);
@@ -3153,18 +3415,23 @@ function generateBoletimPDF(boletimId) {
 // ======================================================
 
 async function sendBoletimByEmail(boletim) {
-    // Find the school associated with the boletim (via lesson plan escola or fallback to first school)
+    // Find the school associated with the boletim
     let targetSchool = null;
     
-    // Try to find by plano code
-    if (boletim.planoCodigo) {
+    // Prioritize selected school from dropdown
+    if (boletim.escolaCode) {
+        targetSchool = registeredSchools.find(s => s.code === boletim.escolaCode);
+    }
+    
+    // Fallback 1: Try to find by plano code
+    if (!targetSchool && boletim.planoCodigo) {
         const plan = lessonPlans.find(p => p.code === boletim.planoCodigo);
         if (plan && plan.escola) {
             targetSchool = registeredSchools.find(s => s.code === plan.escola);
         }
     }
     
-    // Fallback: use first school with coordinator email
+    // Fallback 2: use first school with coordinator email
     if (!targetSchool) {
         targetSchool = registeredSchools.find(s => s.coordinatorEmail);
     }

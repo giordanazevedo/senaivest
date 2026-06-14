@@ -209,8 +209,7 @@ async function handleRequest(req, res) {
             if (result.ok) {
                 respond(res, 201, { message: 'Usuário cadastrado com sucesso!', user: newUser });
             } else if (result.duplicate) {
-                // Idempotent: return 200 if user already exists (auto-sync scenario)
-                respond(res, 200, { message: 'Usuário já existe.', user: newUser });
+                respond(res, 409, { error: 'Este e-mail já possui uma conta cadastrada. Utilize seu login e senha para acessar o sistema.' });
             } else {
                 respond(res, 500, { error: 'Erro ao salvar o usuário.' });
             }
