@@ -262,6 +262,84 @@ let notifications = [
     }
 ];
 
+let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
+let registeredLabs = JSON.parse(localStorage.getItem('labs')) || [
+    { id: 1, name: 'Almoxarifado Lab 1', sigla: 'LAB-1', responsavel: 'Prof. Carlos' },
+    { id: 2, name: 'Almoxarifado Lab 2', sigla: 'LAB-2', responsavel: 'Prof(a). Emanuela' },
+    { id: 3, name: 'Almoxarifado Lab 3', sigla: 'LAB-3', responsavel: 'Prof(a). Carol' }
+];
+let orgPosts = JSON.parse(localStorage.getItem('posts')) || [
+    {
+        id: 1,
+        title: 'Descarte Correto de Moldes',
+        content: 'Lembre-se de separar os retalhos de papel kraft dos tecidos. O papel kraft deve ir para o cesto de recicláveis secos, enquanto retalhos de algodão podem ser doados para oficinas de artesanato.',
+        image: 'assets/post_kraft.png',
+        author: 'Prof(a). Carol',
+        date: '12/06/2026',
+        likes: 5,
+        likedBy: [],
+        comments: [
+            { author: 'Prof. Carlos', text: 'Ótima iniciativa! Já estamos separando os retalhos no Lab 1.' }
+        ]
+    }
+];
+
+if (!localStorage.getItem('inventory')) {
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+} else {
+    inventory = JSON.parse(localStorage.getItem('inventory'));
+}
+
+if (!localStorage.getItem('notifications')) {
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+} else {
+    notifications = JSON.parse(localStorage.getItem('notifications'));
+}
+
+function syncWithBackend(type, dataArray) {
+    localStorage.setItem(type, JSON.stringify(dataArray));
+    fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, data: dataArray })
+    })
+    .then(res => {
+        if (!res.ok) console.warn(`Failed to sync ${type} to backend`);
+    })
+    .catch(err => {
+        console.warn(`Backend sync error for ${type}:`, err);
+    });
+}
+
+async function loadBackendData() {
+    try {
+        const response = await fetch('/api/data');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.inventory !== null) { inventory = data.inventory; localStorage.setItem('inventory', JSON.stringify(inventory)); }
+            if (data.plans !== null) { lessonPlans = data.plans; localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans)); }
+            if (data.boletins !== null) { registeredBoletins = data.boletins; localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins)); }
+            if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
+            if (data.schools !== null) { registeredSchools = data.schools; localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
+            if (data.labs !== null) { registeredLabs = data.labs; localStorage.setItem('labs', JSON.stringify(registeredLabs)); }
+            if (data.posts !== null) { orgPosts = data.posts; localStorage.setItem('posts', JSON.stringify(orgPosts)); }
+            
+            renderLessonPlans();
+            renderNotifications();
+            updateDashboardStats();
+            renderRegisteredBoletins();
+            renderSchools();
+            renderLabButtons();
+            renderOrgPosts();
+            populatePlanoLocalDropdown();
+            populatePlanoEscolaDropdown();
+            if (currentLab) renderInventory();
+        }
+    } catch (err) {
+        console.warn('Could not sync databases with backend (offline mode):', err);
+    }
+}
+
 // DOMContentLoaded Initializations
 document.addEventListener('DOMContentLoaded', () => {
     // Setup Navigation Tabs
@@ -302,28 +380,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check registration state
     const regOverlay = document.getElementById('register-fullscreen-overlay');
-    const registeredUser = localStorage.getItem('registeredUser');
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    let registeredUser = localStorage.getItem('registeredUser');
+    let isLoggedIn = localStorage.getItem('isLoggedIn');
     const signupCard = document.getElementById('auth-cadastro-card');
     const loginCard = document.getElementById('auth-login-card');
 
     if (!registeredUser) {
-        // No user registered, show signup card
+        // No user at all — show signup form for new users
         regOverlay.style.display = 'flex';
         signupCard.style.display = 'flex';
         loginCard.style.display = 'none';
-    } else if (isLoggedIn !== 'true') {
-        // Stored user exists but not logged in, show login card
-        regOverlay.style.display = 'flex';
-        signupCard.style.display = 'none';
-        loginCard.style.display = 'flex';
-        const user = JSON.parse(registeredUser);
-        updateUserUI(user);
     } else {
-        // Logged in
-        regOverlay.style.display = 'none';
+        // User already registered — AUTO-LOGIN instantly, no screen needed!
+        // If they manually logged out, still auto-login them back (session persistence)
         const user = JSON.parse(registeredUser);
+        localStorage.setItem('isLoggedIn', 'true');
+        isLoggedIn = 'true';
+        regOverlay.style.display = 'none';
         updateUserUI(user);
+        
+        // Sync to backend in background (non-blocking)
+        fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user)
+        }).catch(() => {});
     }
 
     // Toggle buttons between signup and login cards inside overlay
@@ -380,13 +461,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 avatarData: ''
             };
 
-            localStorage.setItem('registeredUser', JSON.stringify(newUser));
-            updateUserUI(newUser);
-            
-            // Success notification and toggle to login view inside overlay
-            showToast('Cadastro realizado com sucesso! Faça login para entrar.', 'success');
-            signupCard.style.display = 'none';
-            loginCard.style.display = 'flex';
+            // Call API
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUser)
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('registeredUser', JSON.stringify(newUser));
+                    localStorage.setItem('isLoggedIn', 'true'); // Auto-login!
+                    updateUserUI(newUser);
+                    
+                    regOverlay.style.transition = 'opacity 0.5s ease-out';
+                    regOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        regOverlay.style.display = 'none';
+                        regOverlay.style.opacity = '1';
+                    }, 500);
+
+                    showToast('Cadastro e login realizados com sucesso!', 'success');
+                    switchTab('inicio');
+                } else {
+                    showToast(data.error || 'Erro no cadastro.', 'error');
+                }
+            })
+            .catch(err => {
+                console.warn('Backend offline, salvando localmente:', err);
+                localStorage.setItem('registeredUser', JSON.stringify(newUser));
+                localStorage.setItem('isLoggedIn', 'true'); // Auto-login!
+                updateUserUI(newUser);
+                
+                regOverlay.style.transition = 'opacity 0.5s ease-out';
+                regOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    regOverlay.style.display = 'none';
+                    regOverlay.style.opacity = '1';
+                }, 500);
+
+                showToast('Cadastro e login realizados (Modo Local)!', 'success');
+                switchTab('inicio');
+            });
         });
     }
 
@@ -398,30 +514,85 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value;
 
-            const storedUserStr = localStorage.getItem('registeredUser');
-            if (!storedUserStr) {
-                showToast('Nenhum usuário cadastrado no sistema!', 'error');
-                return;
-            }
+            const credentials = { email, password: senha };
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials)
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('registeredUser', JSON.stringify(data.user));
+                    updateUserUI(data.user);
+                    
+                    regOverlay.style.transition = 'opacity 0.5s ease-out';
+                    regOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        regOverlay.style.display = 'none';
+                        regOverlay.style.opacity = '1';
+                    }, 500);
 
-            const storedUser = JSON.parse(storedUserStr);
-            if (storedUser.email === email && storedUser.password === senha) {
-                localStorage.setItem('isLoggedIn', 'true');
-                updateUserUI(storedUser);
-                
-                // Hide registration overlay with animation
-                regOverlay.style.transition = 'opacity 0.5s ease-out';
-                regOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    regOverlay.style.display = 'none';
-                    regOverlay.style.opacity = '1'; // reset for next logout
-                }, 500);
+                    showToast('Login realizado com sucesso!', 'success');
+                    switchTab('inicio');
+                } else {
+                    // Local fallback check if backend is online but user not registered there yet (e.g. db reset)
+                    const storedUserStr = localStorage.getItem('registeredUser');
+                    if (storedUserStr) {
+                        const storedUser = JSON.parse(storedUserStr);
+                        if (storedUser.email.toLowerCase() === email.toLowerCase() && storedUser.password === senha) {
+                            localStorage.setItem('isLoggedIn', 'true');
+                            updateUserUI(storedUser);
+                            
+                            // Auto-register on the backend so it's in sync
+                            fetch('/api/register', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(storedUser)
+                            }).catch(() => {});
 
-                showToast('Login realizado com sucesso!', 'success');
-                switchTab('inicio');
-            } else {
-                showToast('E-mail ou senha inválidos!', 'error');
-            }
+                            regOverlay.style.transition = 'opacity 0.5s ease-out';
+                            regOverlay.style.opacity = '0';
+                            setTimeout(() => {
+                                regOverlay.style.display = 'none';
+                                regOverlay.style.opacity = '1';
+                            }, 500);
+
+                            showToast('Login realizado com sucesso (Modo Sincronizado)!', 'success');
+                            switchTab('inicio');
+                            return;
+                        }
+                    }
+                    showToast(data.error || 'E-mail ou senha inválidos!', 'error');
+                }
+            })
+            .catch(err => {
+                console.warn('Backend offline, usando login local:', err);
+                const storedUserStr = localStorage.getItem('registeredUser');
+                if (!storedUserStr) {
+                    showToast('Nenhum usuário cadastrado no sistema!', 'error');
+                    return;
+                }
+                const storedUser = JSON.parse(storedUserStr);
+                if (storedUser.email.toLowerCase() === email.toLowerCase() && storedUser.password === senha) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    updateUserUI(storedUser);
+                    
+                    regOverlay.style.transition = 'opacity 0.5s ease-out';
+                    regOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        regOverlay.style.display = 'none';
+                        regOverlay.style.opacity = '1';
+                    }, 500);
+
+                    showToast('Login realizado com sucesso (Modo Local)!', 'success');
+                    switchTab('inicio');
+                } else {
+                    showToast('E-mail ou senha inválidos!', 'error');
+                }
+            });
         });
     }
 
@@ -430,10 +601,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            localStorage.setItem('isLoggedIn', 'false');
+            if (!confirm('Deseja realmente sair do sistema? Você precisará se cadastrar novamente para entrar.')) return;
             
-            signupCard.style.display = 'none';
-            loginCard.style.display = 'flex';
+            // Clear session data completely
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('registeredUser');
+            
+            // Show signup card for fresh start
+            signupCard.style.display = 'flex';
+            loginCard.style.display = 'none';
             regOverlay.style.display = 'flex';
             
             showToast('Você saiu do sistema.', 'info');
@@ -454,7 +630,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.nascimento = document.getElementById('profile-nascimento').value;
                 
                 const newSenha = document.getElementById('profile-senha').value;
-                // password validation if changed
                 if (newSenha && newSenha !== user.password) {
                     const hasMinLength = newSenha.length >= 8;
                     const hasUpper = /[A-Z]/.test(newSenha);
@@ -472,8 +647,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.role = document.getElementById('profile-role').value.trim();
                 user.responsibleClass = document.getElementById('profile-class').value.trim();
                 
-                localStorage.setItem('registeredUser', JSON.stringify(user));
-                
                 // Save Gemini Key
                 const geminiKey = document.getElementById('profile-gemini-key').value.trim();
                 if (geminiKey) {
@@ -482,8 +655,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('gemini_api_key');
                 }
                 
-                updateUserUI(user);
-                showToast('Informações do perfil atualizadas!', 'success');
+                // Call API
+                fetch('/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (response.ok) {
+                        localStorage.setItem('registeredUser', JSON.stringify(data.user));
+                        updateUserUI(data.user);
+                        showToast('Informações do perfil atualizadas!', 'success');
+                    } else {
+                        showToast(data.error || 'Erro ao atualizar dados.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.warn('Backend offline, salvando localmente:', err);
+                    localStorage.setItem('registeredUser', JSON.stringify(user));
+                    updateUserUI(user);
+                    showToast('Informações do perfil atualizadas (Modo Local)!', 'success');
+                });
             }
         });
     }
@@ -571,6 +764,19 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDashboardStats();
     renderRegisteredBoletins();
     setupNextBoletimCode();
+    
+    // Custom registrations initial render
+    renderSchools();
+    renderLabButtons();
+    renderOrgPosts();
+    populatePlanoLocalDropdown();
+    populatePlanoEscolaDropdown();
+    
+    // Load fresh data from the server
+    loadBackendData();
+
+    // Periodically check for lesson plan expirations (every 5 seconds)
+    setInterval(checkLessonPlanExpirations, 5000);
 
     // Auto-calculate difference in Boletim Form
     const inputPrevista = document.getElementById('boletim-qtd-prevista');
@@ -590,6 +796,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
     document.getElementById('form-add-plano').addEventListener('submit', handleAddPlanoSubmit);
     document.getElementById('form-transfer-product').addEventListener('submit', handleTransferSubmit);
+    
+    const schoolForm = document.getElementById('school-registration-form');
+    if (schoolForm) schoolForm.addEventListener('submit', handleSchoolRegistrationSubmit);
+    
+    const almoxForm = document.getElementById('form-add-almoxarifado');
+    if (almoxForm) almoxForm.addEventListener('submit', handleAddAlmoxarifadoSubmit);
+    
+    const postForm = document.getElementById('org-post-form');
+    if (postForm) postForm.addEventListener('submit', handleOrgPostSubmit);
 
     // Initial Date inputs default to today
     const today = new Date().toISOString().split('T')[0];
@@ -683,12 +898,36 @@ function renderInventory() {
         
         items.forEach(item => {
             const card = document.createElement('div');
-            card.className = 'item-card';
+            let cardClass = 'item-card';
+            if (item.inconformidade) {
+                cardClass += ' inconformidade';
+            }
+            card.className = cardClass;
             
             // Status CSS class binding
             let statusClass = 'status-pertencente';
             if (item.status === 'Não Pertencente') statusClass = 'status-naopertencente';
-            if (item.status === 'Não apresenta no estoque') statusClass = 'status-falta';
+            if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
+
+            // Action buttons
+            let actionButtons = '';
+            
+            // Transfer button (always shown)
+            actionButtons += `<button class="btn-card-transfer" onclick="openTransferModal(${item.id})">Transferir</button>`;
+            
+            // Return button: shown when item is in a different lab than its origin OR has inconformidade
+            if (item.originLab && (item.lab !== item.originLab || item.inconformidade)) {
+                actionButtons += `<button class="btn-card-transfer" onclick="returnItemToOrigin(${item.id})" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>`;
+            }
+            
+            // Delete button: only for items that originate from this lab (Pertencente)
+            if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
+                actionButtons += `<button class="btn-card-transfer" onclick="deleteInventoryItem(${item.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto">🗑️ Excluir</button>`;
+            }
+
+            // Build status label
+            let statusLabel = item.status;
+            if (item.inconformidade) statusLabel = '⚠️ Inconformidade (Atraso)';
 
             card.innerHTML = `
                 <div class="item-img-box">
@@ -701,26 +940,37 @@ function renderInventory() {
                     <div class="item-meta">Localização: ${item.location}</div>
                     <div class="item-meta">${item.meta}</div>
                     <div class="card-action-row">
-                        <div class="item-status ${statusClass}">${item.status}</div>
-                        <button class="btn-card-transfer" onclick="openTransferModal(${item.id})">Transferir</button>
+                        <div class="item-status ${statusClass}">${statusLabel}</div>
+                        <div style="display: flex; gap: 5px;">${actionButtons}</div>
                     </div>
                 </div>
             `;
             gridElement.appendChild(card);
         });
 
-        // Add special dashed button to the "Ferramentas" column to register new item
-        if (cat === 'ferramentas') {
-            const addCard = document.createElement('div');
-            addCard.className = 'btn-add-product-card';
-            addCard.onclick = () => openNewProductModal(currentLab);
-            addCard.innerHTML = `
-                <div class="add-circle-icon">+</div>
-                <span>Adicionar Novo Produto</span>
-            `;
-            gridElement.appendChild(addCard);
-        }
+        // Add special dashed button to ALL columns to register new item
+        const addCard = document.createElement('div');
+        addCard.className = 'btn-add-product-card';
+        addCard.onclick = () => openNewProductModal(currentLab);
+        addCard.innerHTML = `
+            <div class="add-circle-icon">+</div>
+            <span>Adicionar Novo Produto</span>
+        `;
+        gridElement.appendChild(addCard);
     });
+}
+
+// DELETE INVENTORY ITEM
+function deleteInventoryItem(itemId) {
+    const item = inventory.find(i => i.id === itemId);
+    if (!item) return;
+    if (!confirm(`Deseja excluir permanentemente "${item.name}" do almoxarifado?`)) return;
+    
+    inventory = inventory.filter(i => i.id !== itemId);
+    syncWithBackend('inventory', inventory);
+    renderInventory();
+    updateDashboardStats();
+    showToast(`"${item.name}" excluído do almoxarifado.`, 'info');
 }
 
 // MODAL CONTROLS
@@ -774,14 +1024,14 @@ function openTransferModal(itemId) {
     const selectDest = document.getElementById('trans-destino');
     selectDest.innerHTML = '';
     
-    for (let i = 1; i <= 3; i++) {
-        if (i !== item.lab) {
+    registeredLabs.forEach(lab => {
+        if (lab.id !== item.lab) {
             const opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = `Almoxarifado Lab ${i}`;
+            opt.value = lab.id;
+            opt.textContent = lab.name;
             selectDest.appendChild(opt);
         }
-    }
+    });
 
     document.getElementById('modal-transfer-product').classList.add('active');
 }
@@ -802,11 +1052,16 @@ function handleTransferSubmit(e) {
     const sourceLab = item.lab;
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     
-    // Transfer logic:
-    // Change item's lab to destination lab, update metadata and status
+    // Save origin if first transfer
+    if (!item.originLab) item.originLab = item.lab;
+    
+    // Transfer logic: move item to destination lab
     item.lab = destLab;
+    item.status = 'Não Pertencente'; // CORRECTED: transferred items are "Não Pertencente" in the new lab
     item.meta = `Horário: ${nowTime} | Transferido do Lab ${sourceLab} | Responsável: ${professor}`;
-    item.status = 'Pertencente'; // since it's now in the new lab
+    
+    // Save transfer info for notifications
+    item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: destLab };
 
     // Add activity log to dashboard
     addActivityLog(`${professor} transferiu ${quantityText} ${item.name} para o Lab ${destLab}`);
@@ -816,6 +1071,7 @@ function handleTransferSubmit(e) {
     
     // Close modal, re-render, update stats and show toast
     closeModal('modal-transfer-product');
+    syncWithBackend('inventory', inventory);
     renderInventory();
     updateDashboardStats();
     showToast('Material transferido com sucesso!', 'success');
@@ -846,6 +1102,7 @@ function handleAddProductSubmit(e) {
     const newItem = {
         id: inventory.length + 1,
         lab: labId,
+        originLab: labId,
         category,
         name,
         quantity,
@@ -864,6 +1121,7 @@ function handleAddProductSubmit(e) {
     // Trigger notification
     addNotification('info', `Novo item adicionado`, `${quantity} ${name} cadastrado no Almoxarifado Lab ${labId}.`);
 
+    syncWithBackend('inventory', inventory);
     renderInventory();
     updateDashboardStats();
     closeModal('modal-add-product');
@@ -947,6 +1205,7 @@ function handleBoletimSubmit(e) {
         id: registeredBoletins.length + 1,
         code: codigo,
         date: data,
+        timeOfDay: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         curso: curso,
         professor: prof,
         material: material,
@@ -966,7 +1225,7 @@ function handleBoletimSubmit(e) {
     };
 
     registeredBoletins.push(newBoletim);
-    localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins));
+    syncWithBackend('boletins', registeredBoletins);
 
     // Add activity log to dashboard
     addActivityLog(`Boletim de Ocorrência ${codigo} enviado por ${prof}`);
@@ -990,7 +1249,8 @@ function handleBoletimSubmit(e) {
     
     // Redirect to personal reports tab
     setTimeout(() => {
-        switchTab('minhas-denuncias');
+        switchTab('ocorrencias');
+        switchOcorrenciasTab('minhas');
     }, 1000);
 }
 
@@ -1003,6 +1263,14 @@ function handleAddPlanoSubmit(e) {
     const course = document.getElementById('plano-curso-input').value.trim();
     const topic = document.getElementById('plano-tema-input').value.trim();
     const objectives = document.getElementById('plano-objetivos-input').value.trim();
+    const duracao = parseFloat(document.getElementById('plano-duracao-input').value) || 2;
+    const local = parseInt(document.getElementById('plano-local-input').value) || 1;
+    const escola = document.getElementById('plano-escola-input').value;
+    
+    // Get current logged-in user as professor responsible
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    const professor = registeredUserStr ? JSON.parse(registeredUserStr).name : 'Não informado';
+    const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     if (tempPlanoMaterials.length === 0) {
         showToast('Adicione pelo menos um material à Ficha de Controle!', 'error');
@@ -1016,17 +1284,39 @@ function handleAddPlanoSubmit(e) {
         course,
         topic,
         objectives,
+        duracao,
+        local,
+        escola,
+        professor,
+        createdAt: Date.now(),
         resources: [...tempPlanoMaterials] // clone array
     };
 
+    // Auto-transfer materials to target lab and flag them
+    tempPlanoMaterials.forEach(m => {
+        const item = inventory.find(i => i.id === m.id);
+        if (item) {
+            if (!item.originLab) {
+                item.originLab = item.lab;
+            }
+            const sourceLab = item.lab;
+            item.lab = local;
+            item.status = local !== sourceLab ? 'Não Pertencente' : item.status;
+            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} no Lab ${local} | Responsável: ${professor}`;
+            // Save transfer info for later notification
+            item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
+        }
+    });
+
     lessonPlans.push(newPlano);
-    localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
+    syncWithBackend('plans', lessonPlans);
+    syncWithBackend('inventory', inventory);
     
-    addActivityLog(`Novo plano cadastrado para a turma: ${course}`);
+    addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`);
     renderLessonPlans();
     updateDashboardStats();
     closeModal('modal-add-plano');
-    showToast('Plano de aula e Ficha de Controle salvos!', 'success');
+    showToast('Plano de aula cadastrado e materiais transferidos!', 'success');
 }
 
 function renderLessonPlans() {
@@ -1054,6 +1344,11 @@ function renderLessonPlans() {
 
         const planCode = plano.code || `PLAN-${500 + plano.id}`;
         const row = document.createElement('tr');
+        
+        // Find School Code
+        const schoolObj = registeredSchools.find(s => s.code === plano.escola);
+        const schoolName = schoolObj ? schoolObj.name : (plano.escola || 'SENAI Central');
+        
         row.innerHTML = `
             <td>${formattedDate}</td>
             <td>
@@ -1061,6 +1356,8 @@ function renderLessonPlans() {
                 <strong>${plano.course}</strong>
             </td>
             <td>${plano.topic}</td>
+            <td><strong>${plano.duracao || 2}h</strong> no Lab ${plano.local || 1}</td>
+            <td><strong>${schoolName}</strong></td>
             <td>${plano.objectives}</td>
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
             <td class="plano-actions">
@@ -1075,7 +1372,7 @@ function renderLessonPlans() {
 function deleteLessonPlan(id) {
     if (confirm('Tem certeza que deseja excluir este plano de aula?')) {
         lessonPlans = lessonPlans.filter(p => p.id !== id);
-        localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
+        syncWithBackend('plans', lessonPlans);
         renderLessonPlans();
         updateDashboardStats();
         showToast('Plano de aula removido.', 'success');
@@ -1259,6 +1556,7 @@ function markNotificationRead(id) {
     const notif = notifications.find(n => n.id === id);
     if (notif) {
         notif.read = true;
+        syncWithBackend('notifications', notifications);
         renderNotifications();
         updateDashboardStats();
     }
@@ -1266,6 +1564,7 @@ function markNotificationRead(id) {
 
 function deleteNotification(id) {
     notifications = notifications.filter(n => n.id !== id);
+    syncWithBackend('notifications', notifications);
     renderNotifications();
     updateDashboardStats();
     showToast('Notificação excluída.', 'success');
@@ -1281,6 +1580,7 @@ function addNotification(type, title, message) {
         read: false
     };
     notifications.unshift(newNotif);
+    syncWithBackend('notifications', notifications);
     renderNotifications();
     updateDashboardStats();
 }
@@ -1312,9 +1612,8 @@ function updateDashboardStats() {
     // Total lesson plans count
     document.getElementById('stats-total-planos').textContent = lessonPlans.length;
 
-    // Total reports count (approximated by notifications warning count)
-    const reportCount = notifications.filter(n => n.type === 'warning').length;
-    document.getElementById('stats-total-boletins').textContent = reportCount;
+    // Total reports count
+    document.getElementById('stats-total-boletins').textContent = registeredBoletins.length;
 }
 
 // DASHBOARD LOG GENERATOR
@@ -1854,9 +2153,10 @@ function renderRegisteredBoletins() {
 function createBoletimCard(b) {
     const card = document.createElement('div');
     card.className = 'boletim-card-file';
+    const timeText = b.timeOfDay ? ` às ${b.timeOfDay}` : '';
     card.innerHTML = `
         <h3 class="boletim-card-title">${b.code}</h3>
-        <div class="boletim-card-meta">Data: <strong>${b.date}</strong></div>
+        <div class="boletim-card-meta">Data/Hora: <strong>${b.date}${timeText}</strong></div>
         <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
         <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
         <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
@@ -1874,7 +2174,7 @@ function openBoletimDetailsModal(id) {
     if (!b) return;
 
     document.getElementById('view-boletim-doc-code').textContent = `BOLETIM DE OCORRÊNCIA – COD: ${b.code}`;
-    document.getElementById('view-boletim-data').textContent = b.date;
+    document.getElementById('view-boletim-data').textContent = b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : '');
     document.getElementById('view-boletim-origem').textContent = b.origem;
     document.getElementById('view-boletim-curso').textContent = b.curso;
     document.getElementById('view-boletim-professor').textContent = b.professor;
@@ -1892,3 +2192,670 @@ function openBoletimDetailsModal(id) {
 
     document.getElementById('modal-view-boletim').classList.add('active');
 }
+
+// ==========================================
+// CUSTOMIZED FUNCTIONS FOR NEW FEATURES
+// ==========================================
+
+function returnItemToOrigin(itemId) {
+    const item = inventory.find(i => i.id === itemId);
+    if (!item) return;
+    
+    const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const originLab = item.originLab || item.lab;
+    
+    item.lab = originLab;
+    item.inconformidade = false;
+    item.status = 'Pertencente'; // Restored to origin: Pertencente again
+    item.transferInfo = null;    // Clear transfer info
+    item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (Lab ${originLab})`;
+    
+    syncWithBackend('inventory', inventory);
+    renderInventory();
+    updateDashboardStats();
+    showToast(`Item devolvido ao laboratório de origem com sucesso!`, 'success');
+}
+
+function renderSchools() {
+    const container = document.getElementById('escolas-lista-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (registeredSchools.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma escola cadastrada ainda.</div>`;
+        return;
+    }
+    
+    registeredSchools.forEach(school => {
+        const div = document.createElement('div');
+        div.className = 'school-card-item';
+        div.innerHTML = `
+            <div class="school-card-info">
+                <span class="school-card-name">${school.name}</span>
+                <span class="school-card-meta">Sigla: ${school.code} | Cidade: ${school.city}</span>
+            </div>
+            <button class="btn-delete-school" onclick="deleteSchool(${school.id})" title="Excluir Escola">🗑️</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function handleSchoolRegistrationSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('school-name').value.trim();
+    const code = document.getElementById('school-code').value.trim().toUpperCase();
+    const city = document.getElementById('school-city').value.trim();
+    
+    if (registeredSchools.some(s => s.code === code)) {
+        showToast('Já existe uma escola cadastrada com este código!', 'error');
+        return;
+    }
+    
+    const newSchool = {
+        id: registeredSchools.length > 0 ? Math.max(...registeredSchools.map(s => s.id)) + 1 : 1,
+        name,
+        code,
+        city
+    };
+    
+    registeredSchools.push(newSchool);
+    syncWithBackend('schools', registeredSchools);
+    renderSchools();
+    populatePlanoEscolaDropdown();
+    
+    document.getElementById('school-registration-form').reset();
+    showToast('Escola cadastrada com sucesso!', 'success');
+}
+
+function deleteSchool(id) {
+    if (confirm('Deseja realmente excluir esta escola?')) {
+        registeredSchools = registeredSchools.filter(s => s.id !== id);
+        syncWithBackend('schools', registeredSchools);
+        renderSchools();
+        populatePlanoEscolaDropdown();
+        showToast('Escola removida.', 'success');
+    }
+}
+
+function renderLabButtons() {
+    const container = document.getElementById('almox-buttons-group-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // Get selected school filter
+    const filterSelect = document.getElementById('almox-filter-escola');
+    const selectedSchoolId = filterSelect ? filterSelect.value : '';
+    
+    // Update filter select options from registered schools
+    if (filterSelect) {
+        const currentVal = filterSelect.value;
+        filterSelect.innerHTML = '<option value="">Todas as Escolas</option>';
+        registeredSchools.forEach(school => {
+            const opt = document.createElement('option');
+            opt.value = school.id || school.name;
+            opt.textContent = school.name;
+            filterSelect.appendChild(opt);
+        });
+        filterSelect.value = currentVal; // restore selection
+    }
+    
+    // Also populate almox-escola-vinculo in the add almox modal
+    const vinculoSelect = document.getElementById('almox-escola-vinculo');
+    if (vinculoSelect) {
+        const vinculoVal = vinculoSelect.value;
+        vinculoSelect.innerHTML = '<option value="">Nenhuma escola específica</option>';
+        registeredSchools.forEach(school => {
+            const opt = document.createElement('option');
+            opt.value = school.id || school.name;
+            opt.textContent = school.name;
+            vinculoSelect.appendChild(opt);
+        });
+        vinculoSelect.value = vinculoVal;
+    }
+    
+    // Filter labs by school if one is selected
+    const labsToShow = selectedSchoolId
+        ? registeredLabs.filter(l => l.schoolId === selectedSchoolId || l.schoolId === ''  || !l.schoolId)
+        : registeredLabs;
+    
+    // If filtering and no results, show message
+    if (selectedSchoolId && labsToShow.filter(l => l.schoolId === selectedSchoolId).length === 0) {
+        const noResultMsg = document.createElement('div');
+        noResultMsg.style.cssText = 'color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px; grid-column: 1/-1;';
+        noResultMsg.textContent = 'Nenhum almoxarifado vinculado a esta escola. Cadastre um novo abaixo.';
+        container.appendChild(noResultMsg);
+    }
+    
+    const filteredLabs = selectedSchoolId 
+        ? registeredLabs.filter(l => String(l.schoolId) === String(selectedSchoolId))
+        : registeredLabs;
+    
+    filteredLabs.forEach(lab => {
+        const btn = document.createElement('button');
+        btn.className = 'almox-button';
+        btn.onclick = () => openLab(lab.id);
+        const schoolLabel = lab.schoolId 
+            ? (registeredSchools.find(s => String(s.id || s.name) === String(lab.schoolId))?.name || '')
+            : '';
+        btn.innerHTML = `ALMOXARIFADO ${lab.name.toUpperCase()}${schoolLabel ? `<br><span style="font-size:0.7rem; opacity:0.75; font-weight:400;">🏫 ${schoolLabel}</span>` : ''}`;
+        container.appendChild(btn);
+    });
+    
+    // Add the "+ CADASTRAR ALMOXARIFADO" button
+    const plusBtn = document.createElement('button');
+    plusBtn.className = 'almox-button';
+    plusBtn.onclick = openAddAlmoxarifadoModal;
+    plusBtn.style.cssText = 'background-color: rgba(211, 188, 162, 0.05); border: 2.5px dashed var(--primary-beige); color: var(--primary-beige); text-shadow: none;';
+    plusBtn.textContent = '+ CADASTRAR ALMOXARIFADO';
+    container.appendChild(plusBtn);
+}
+
+function openAddAlmoxarifadoModal() {
+    document.getElementById('almox-name').value = '';
+    document.getElementById('almox-responsavel').value = '';
+    document.getElementById('almox-sigla').value = '';
+    
+    // Populate school select
+    const vinculoSelect = document.getElementById('almox-escola-vinculo');
+    if (vinculoSelect) {
+        vinculoSelect.innerHTML = '<option value="">Nenhuma escola específica</option>';
+        registeredSchools.forEach(school => {
+            const opt = document.createElement('option');
+            opt.value = school.id || school.name;
+            opt.textContent = school.name;
+            vinculoSelect.appendChild(opt);
+        });
+    }
+    
+    document.getElementById('modal-add-almoxarifado').classList.add('active');
+}
+
+function handleAddAlmoxarifadoSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('almox-name').value.trim();
+    const responsavel = document.getElementById('almox-responsavel').value.trim();
+    const sigla = document.getElementById('almox-sigla').value.trim().toUpperCase();
+    const schoolId = document.getElementById('almox-escola-vinculo')?.value || '';
+    
+    const newId = registeredLabs.length > 0 ? Math.max(...registeredLabs.map(l => l.id)) + 1 : 1;
+    
+    const newLab = {
+        id: newId,
+        name,
+        responsavel,
+        sigla,
+        schoolId
+    };
+    
+    registeredLabs.push(newLab);
+    syncWithBackend('labs', registeredLabs);
+    renderLabButtons();
+    populatePlanoLocalDropdown();
+    
+    closeModal('modal-add-almoxarifado');
+    showToast('Almoxarifado cadastrado com sucesso!', 'success');
+}
+
+function populatePlanoLocalDropdown() {
+    const select = document.getElementById('plano-local-input');
+    if (!select) return;
+    select.innerHTML = '';
+    
+    registeredLabs.forEach(lab => {
+        const opt = document.createElement('option');
+        opt.value = lab.id;
+        opt.textContent = lab.name;
+        select.appendChild(opt);
+    });
+}
+
+function populatePlanoEscolaDropdown() {
+    const select = document.getElementById('plano-escola-input');
+    if (!select) return;
+    select.innerHTML = '';
+    
+    if (registeredSchools.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Nenhuma escola cadastrada';
+        select.appendChild(opt);
+        return;
+    }
+    
+    registeredSchools.forEach(school => {
+        const opt = document.createElement('option');
+        opt.value = school.code;
+        opt.textContent = school.name;
+        select.appendChild(opt);
+    });
+}
+
+let currentViewerCategory = '';
+function openNetworkCategoryViewer(category) {
+    currentViewerCategory = category;
+    const modal = document.getElementById('modal-network-viewer');
+    const title = document.getElementById('modal-network-viewer-title');
+    
+    const catTitles = {
+        'ferramentas': 'Ferramentas na Rede',
+        'tecidos': 'Tecidos na Rede',
+        'moldes': 'Moldes na Rede',
+        'linhas': 'Linhas na Rede'
+    };
+    
+    title.textContent = catTitles[category] || 'Produtos na Rede';
+    renderNetworkCategoryItems();
+    
+    // Bind search
+    const searchInput = document.getElementById('network-viewer-search');
+    searchInput.value = '';
+    searchInput.oninput = renderNetworkCategoryItems;
+    
+    // Bind quick add product button
+    const quickAddBtn = document.getElementById('btn-network-viewer-add-prod');
+    quickAddBtn.onclick = () => {
+        closeModal('modal-network-viewer');
+        openNewProductModal(currentLab || 1);
+        // Preset category dropdown
+        const catSelect = document.getElementById('prod-categoria');
+        if (category === 'linhas') {
+            catSelect.value = 'ferramentas';
+        } else {
+            catSelect.value = category;
+        }
+    };
+    
+    modal.classList.add('active');
+}
+
+function renderNetworkCategoryItems() {
+    const tbody = document.getElementById('network-viewer-table-body');
+    const searchVal = document.getElementById('network-viewer-search').value.toLowerCase();
+    tbody.innerHTML = '';
+    
+    let filtered = inventory.filter(item => {
+        if (currentViewerCategory === 'linhas') {
+            return (item.category === 'linhas' || item.name.toLowerCase().includes('linha'));
+        }
+        return item.category === currentViewerCategory;
+    });
+    
+    if (searchVal) {
+        filtered = filtered.filter(item => 
+            item.name.toLowerCase().includes(searchVal) ||
+            item.location.toLowerCase().includes(searchVal)
+        );
+    }
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum produto encontrado.</td></tr>`;
+        return;
+    }
+    
+    filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        const labObj = registeredLabs.find(l => l.id === item.lab);
+        const labName = labObj ? labObj.name : `Lab ${item.lab}`;
+        
+        let statusClass = 'status-pertencente';
+        if (item.status === 'Não Pertencente') statusClass = 'status-naopertencente';
+        if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
+        
+        tr.innerHTML = `
+            <td><strong>${item.name}</strong></td>
+            <td>${item.quantity}</td>
+            <td>${labName}</td>
+            <td>${item.location}</td>
+            <td><span class="item-status ${statusClass}">${item.inconformidade ? 'Inconformidade' : item.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function switchOcorrenciasTab(tab) {
+    const btnMinhas = document.getElementById('btn-subtab-minhas');
+    const btnGerais = document.getElementById('btn-subtab-gerais');
+    const contentMinhas = document.getElementById('subtab-content-minhas');
+    const contentGerais = document.getElementById('subtab-content-gerais');
+    
+    if (tab === 'minhas') {
+        btnMinhas.classList.add('active');
+        btnMinhas.style.color = 'var(--primary-beige)';
+        btnMinhas.style.borderBottom = '2px solid var(--primary-beige)';
+        
+        btnGerais.classList.remove('active');
+        btnGerais.style.color = 'var(--text-muted)';
+        btnGerais.style.borderBottom = 'none';
+        
+        contentMinhas.style.display = 'block';
+        contentGerais.style.display = 'none';
+    } else {
+        btnGerais.classList.add('active');
+        btnGerais.style.color = 'var(--primary-beige)';
+        btnGerais.style.borderBottom = '2px solid var(--primary-beige)';
+        
+        btnMinhas.classList.remove('active');
+        btnMinhas.style.color = 'var(--text-muted)';
+        btnMinhas.style.borderBottom = 'none';
+        
+        contentGerais.style.display = 'block';
+        contentMinhas.style.display = 'none';
+    }
+}
+
+function renderOrgPosts() {
+    const container = document.getElementById('feed-posts-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let currentUserEmail = '';
+    if (registeredUserStr) {
+        const user = JSON.parse(registeredUserStr);
+        currentUserEmail = user.email || '';
+    }
+    
+    const sortedPosts = [...orgPosts].reverse();
+    
+    sortedPosts.forEach(post => {
+        const card = document.createElement('div');
+        card.className = 'perfil-card feed-post-card';
+        card.style.cssText = 'padding: 25px; margin-bottom: 5px;';
+        
+        const liked = post.likedBy && post.likedBy.includes(currentUserEmail);
+        
+        card.innerHTML = `
+            <div class="feed-post-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="feed-post-avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #34495e;">
+                        <svg viewBox="0 0 100 100" style="background:#2c3e50; width:100%; height:100%;">
+                            <circle cx="50" cy="35" r="20" fill="#ecf0f1"/>
+                            <path d="M20 80c0-20 15-30 30-30s30 10 30 30H20z" fill="#ecf0f1"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <strong style="color: var(--text-light); font-size: 0.95rem;">${post.author}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${post.date}</div>
+                    </div>
+                </div>
+                <h4 style="color: var(--primary-beige); font-family: var(--font-heading); margin: 0; font-size: 1rem;">${post.title}</h4>
+            </div>
+            
+            <p style="color: var(--text-light); font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px;">${post.content}</p>
+            
+            ${post.image ? `<img src="${post.image}" style="width: 100%; max-height: 350px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--border-color);">` : ''}
+            
+            <div class="feed-post-actions" style="display: flex; gap: 20px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 10px 0; margin-bottom: 15px;">
+                <button onclick="likeOrgPost(${post.id})" style="background: none; border: none; color: ${liked ? 'var(--primary-beige)' : 'var(--text-muted)'}; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 0.85rem; outline:none;">
+                    👍 ${post.likes || 0} Curtidas
+                </button>
+                <button onclick="toggleCommentBox(${post.id})" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 0.85rem; outline:none;">
+                    💬 ${(post.comments ? post.comments.length : 0)} Comentários
+                </button>
+            </div>
+            
+            <div class="feed-comments-section" id="comments-box-${post.id}" style="display: none;">
+                <div class="feed-comments-list" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding-right: 5px;">
+                    ${post.comments && post.comments.length > 0 ? post.comments.map(c => `
+                        <div style="background: var(--bg-dark); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 3px;">
+                                <strong style="color: var(--primary-beige);">${c.author}</strong>
+                            </div>
+                            <p style="color: var(--text-light); font-size: 0.82rem; margin: 0; line-height: 1.4;">${c.text}</p>
+                        </div>
+                    `).join('') : '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:10px;">Nenhum comentário. Seja o primeiro!</div>'}
+                </div>
+                
+                <form onsubmit="event.preventDefault(); submitComment(${post.id});" style="display: flex; gap: 10px; margin-top:10px;">
+                    <input type="text" id="comment-input-${post.id}" class="form-control-reg" style="margin-bottom: 0; padding: 8px 12px; font-size: 0.85rem;" placeholder="Escreva um comentário..." required>
+                    <button type="submit" class="btn-save-avatar" style="margin-top: 0; padding: 8px 15px; font-size: 0.85rem; white-space: nowrap;">Comentar</button>
+                </form>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+let tempPostImgData = '';
+function handleOrgPostSubmit(e) {
+    e.preventDefault();
+    const title = document.getElementById('post-title').value.trim();
+    const content = document.getElementById('post-content').value.trim();
+    
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let authorName = 'Professora';
+    if (registeredUserStr) {
+        authorName = JSON.parse(registeredUserStr).name || 'Professora';
+    }
+    
+    const newPost = {
+        id: orgPosts.length > 0 ? Math.max(...orgPosts.map(p => p.id)) + 1 : 1,
+        title,
+        content,
+        image: tempPostImgData || '',
+        author: authorName,
+        date: new Date().toLocaleDateString('pt-BR'),
+        likes: 0,
+        likedBy: [],
+        comments: []
+    };
+    
+    orgPosts.push(newPost);
+    syncWithBackend('posts', orgPosts);
+    renderOrgPosts();
+    
+    document.getElementById('org-post-form').reset();
+    tempPostImgData = '';
+    const imgPreview = document.getElementById('post-img-preview-name');
+    if (imgPreview) {
+        imgPreview.style.display = 'none';
+        imgPreview.textContent = '';
+    }
+    showToast('Post publicado no mural!', 'success');
+}
+
+function likeOrgPost(postId) {
+    const post = orgPosts.find(p => p.id === postId);
+    if (!post) return;
+    
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let currentUserEmail = '';
+    if (registeredUserStr) {
+        currentUserEmail = JSON.parse(registeredUserStr).email || '';
+    }
+    
+    if (!post.likedBy) {
+        post.likedBy = [];
+    }
+    
+    const index = post.likedBy.indexOf(currentUserEmail);
+    if (index === -1) {
+        post.likedBy.push(currentUserEmail);
+        post.likes = (post.likes || 0) + 1;
+    } else {
+        post.likedBy.splice(index, 1);
+        post.likes = Math.max(0, (post.likes || 0) - 1);
+    }
+    
+    syncWithBackend('posts', orgPosts);
+    renderOrgPosts();
+}
+
+function toggleCommentBox(postId) {
+    const box = document.getElementById(`comments-box-${postId}`);
+    if (box) {
+        if (box.style.display === 'none') {
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
+    }
+}
+
+function submitComment(postId) {
+    const post = orgPosts.find(p => p.id === postId);
+    if (!post) return;
+    
+    const input = document.getElementById(`comment-input-${postId}`);
+    const commentText = input.value.trim();
+    if (!commentText) return;
+    
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let authorName = 'Professora';
+    if (registeredUserStr) {
+        authorName = JSON.parse(registeredUserStr).name || 'Professora';
+    }
+    
+    if (!post.comments) {
+        post.comments = [];
+    }
+    
+    post.comments.push({
+        author: authorName,
+        text: commentText
+    });
+    
+    syncWithBackend('posts', orgPosts);
+    renderOrgPosts();
+    
+    input.value = '';
+    showToast('Comentário enviado!', 'success');
+}
+
+function checkLessonPlanExpirations() {
+    let changed = false;
+    const now = Date.now();
+    
+    lessonPlans.forEach(plan => {
+        const durationMs = (plan.duracao || 2) * 10 * 1000;
+        const planStart = plan.createdAt || Date.now();
+        const planEnd = planStart + durationMs;
+        
+        if (now >= planEnd && !plan.expired) {
+            plan.expired = true;
+            changed = true;
+            
+            plan.resources.forEach(res => {
+                const item = inventory.find(i => i.id === res.id);
+                if (item) {
+                    if (item.originLab && item.lab !== item.originLab) {
+                        // Mark as inconformidade and update status
+                        item.inconformidade = true;
+                        item.status = 'Não apresenta no estoque';
+                        
+                        // Gather transfer info for rich notification
+                        const professor = item.transferInfo?.professor || plan.professor || 'Não informado';
+                        const transferTime = item.transferInfo?.time || new Date(planStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const originLabObj = registeredLabs.find(l => l.id === item.originLab);
+                        const originLabName = originLabObj ? originLabObj.name : `Lab ${item.originLab}`;
+                        
+                        addNotification(
+                            'warning', 
+                            `⚠️ Inconfomidade de Material — Plano ${plan.code}`, 
+                            `O material "${item.name}" (${item.quantity}) NÃO foi devolvido ao ${originLabName} após o término da aula "${plan.topic || plan.code}". ` +
+                            `Responsável: Prof(a). ${professor} | Horário da saída: ${transferTime} | Escola: ${plan.escola || 'SENAI'}.`
+                        );
+                        
+                        showToast(`Atraso na devolução: ${item.name} no Lab ${item.lab}!`, 'error');
+                    }
+                }
+            });
+        }
+    });
+    
+    if (changed) {
+        syncWithBackend('plans', lessonPlans);
+        syncWithBackend('inventory', inventory);
+        if (currentLab) renderInventory();
+        updateDashboardStats();
+    }
+}
+
+// Bind post-file-input change listener
+document.addEventListener('DOMContentLoaded', () => {
+    const postFileInput = document.getElementById('post-file-input');
+    if (postFileInput) {
+        postFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    tempPostImgData = event.target.result;
+                    const previewDiv = document.getElementById('post-img-preview-name');
+                    if (previewDiv) {
+                        previewDiv.textContent = `Imagem: ${file.name}`;
+                        previewDiv.style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+
+// ======================================================
+// MULTI-USER SYNC: Polling a cada 15 segundos
+// Garante que todos os usuários vejam as últimas modificações
+// ======================================================
+setInterval(async () => {
+    try {
+        const response = await fetch('/api/data');
+        if (!response.ok) return;
+        const data = await response.json();
+        
+        let needsRender = false;
+        
+        if (data.inventory !== null) {
+            const newHash = JSON.stringify(data.inventory);
+            const oldHash = JSON.stringify(inventory);
+            if (newHash !== oldHash) {
+                inventory = data.inventory;
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                needsRender = true;
+            }
+        }
+        if (data.plans !== null) {
+            const newHash = JSON.stringify(data.plans);
+            const oldHash = JSON.stringify(lessonPlans);
+            if (newHash !== oldHash) {
+                lessonPlans = data.plans;
+                localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
+                renderLessonPlans();
+            }
+        }
+        if (data.notifications !== null) {
+            const newHash = JSON.stringify(data.notifications);
+            const oldHash = JSON.stringify(notifications);
+            if (newHash !== oldHash) {
+                notifications = data.notifications;
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+                renderNotifications();
+            }
+        }
+        if (data.labs !== null) {
+            const newHash = JSON.stringify(data.labs);
+            const oldHash = JSON.stringify(registeredLabs);
+            if (newHash !== oldHash) {
+                registeredLabs = data.labs;
+                localStorage.setItem('labs', JSON.stringify(registeredLabs));
+                renderLabButtons();
+            }
+        }
+        if (data.schools !== null) {
+            const newHash = JSON.stringify(data.schools);
+            const oldHash = JSON.stringify(registeredSchools);
+            if (newHash !== oldHash) {
+                registeredSchools = data.schools;
+                localStorage.setItem('schools', JSON.stringify(registeredSchools));
+                renderSchools();
+                renderLabButtons(); // update school filter
+            }
+        }
+        if (needsRender && currentLab) {
+            renderInventory();
+            updateDashboardStats();
+        }
+    } catch (e) {
+        // offline, ignore
+    }
+}, 15000);

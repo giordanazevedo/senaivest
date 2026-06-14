@@ -1,0 +1,16 @@
+{
+  "name": "senaivest",
+  "version": "1.0.0",
+  "description": "SENAIVEST - Sistema de Controle de Almoxarifado para Laboratórios de Vestuário SENAI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["senai", "vestuario", "almoxarifado", "laboratorio"],
+  "author": "SENAIVEST",
+  "license": "MIT"
+}

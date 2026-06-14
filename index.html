@@ -77,7 +77,7 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <button class="close-sidebar-btn" id="close-sidebar-btn" title="Fechar Menu">&times;</button>
-            <div class="profile-section">
+            <div class="profile-section" id="sidebar-profile-section" onclick="switchTab('perfil')" style="cursor: pointer;">
                 <div class="profile-img-container" id="sidebar-profile-img-container">
                     <!-- Placeholder avatar styled beautifully with SVG -->
                     <svg class="profile-img" viewBox="0 0 100 100" style="background:#2c3e50;">
@@ -92,64 +92,63 @@
             </div>
             
             <ul class="nav-menu">
+                <li class="nav-item" data-tab="perfil">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="currentColor"/></svg>
+                        Perfil
+                    </a>
+                </li>
                 <li class="nav-item active" data-tab="inicio">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                         Início
                     </a>
                 </li>
                 <li class="nav-item" data-tab="aba-geral">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
                         Aba Geral
                     </a>
                 </li>
                 <li class="nav-item" data-tab="almoxarifado">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 12H9v-2h6v2zm0-4H9V10h6v2z"/></svg>
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 12H9v-2h6v2zm0-4H9V10h6v2z"/></svg>
                         Almoxarifado
                     </a>
                 </li>
                 <li class="nav-item" data-tab="boletim">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                         Boletim
                     </a>
                 </li>
-                <li class="nav-item" data-tab="minhas-denuncias">
-                    <a class="nav-link">
-                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 10H7v-2h6v2zm3 0h-2v-2h2v2zm3 0h-2v-2h2v2z" fill="currentColor"/></svg>
-                        Minhas Denúncias
-                    </a>
-                </li>
-                <li class="nav-item" data-tab="denuncias-gerais">
+                <li class="nav-item" data-tab="ocorrencias">
                     <a class="nav-link">
                         <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" fill="currentColor"/></svg>
-                        Denúncias Gerais
+                        Ocorrências
                     </a>
                 </li>
-                 <li class="nav-item" data-tab="perfil">
+                <li class="nav-item" data-tab="registrar-escola">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="currentColor"/></svg>
-                        Perfil
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5.89 12.55L12 15.82l6.11-3.27v2.18L12 18l-6.11-3.27v-2.18z" fill="currentColor"/></svg>
+                        Registrar Escola
                     </a>
                 </li>
-
                 <li class="nav-item" data-tab="guia-organizacao">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                         Guia de Organização
                     </a>
                 </li>
                 <li class="nav-item" data-tab="notificacao">
                     <a class="nav-link" id="nav-notif-link">
-                        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
                         Notificação
                     </a>
                 </li>
                 <li class="nav-item" data-tab="plano-aula">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                         Plano de Aula
                     </a>
                 </li>
@@ -197,7 +196,6 @@
                     <!-- Hero Banner -->
                     <div class="inicio-banner">
                         <h1 class="inicio-banner-title">SENAIVEST</h1>
-                        <button class="btn-cadastrese" onclick="switchTab('perfil')">Meu Perfil</button>
                     </div>
 
                     <!-- SENAI Slogan Bar -->
@@ -226,19 +224,19 @@
                     <div class="organizacao-section">
                         <h2 class="organizacao-title">ORGANIZAÇÃO</h2>
                         <div class="organizacao-shortcuts">
-                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                            <div class="shortcut-item" onclick="openNetworkCategoryViewer('tecidos')">
                                 <div class="shortcut-circle">🧵</div>
                                 <span class="shortcut-label">Tecido</span>
                             </div>
-                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                            <div class="shortcut-item" onclick="openNetworkCategoryViewer('ferramentas')">
                                 <div class="shortcut-circle">✂️</div>
                                 <span class="shortcut-label">Ferramentas</span>
                             </div>
-                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                            <div class="shortcut-item" onclick="openNetworkCategoryViewer('moldes')">
                                 <div class="shortcut-circle">📏</div>
                                 <span class="shortcut-label">Moldes</span>
                             </div>
-                            <div class="shortcut-item" onclick="switchTab('almoxarifado')">
+                            <div class="shortcut-item" onclick="openNetworkCategoryViewer('linhas')">
                                 <div class="shortcut-circle">🪡</div>
                                 <span class="shortcut-label">Linha</span>
                             </div>
@@ -344,6 +342,13 @@
                 <div id="almox-selector-view" class="almox-selector-container">
                     <div class="almox-selector-header">
                         <h1>ALMOXARIFADOS</h1>
+                        <!-- Filtro por escola -->
+                        <div class="almox-school-filter" style="margin-top: 12px; display: flex; align-items: center; gap: 12px; justify-content: center;">
+                            <label for="almox-filter-escola" style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;">🏫 FILTRAR POR ESCOLA:</label>
+                            <select id="almox-filter-escola" class="form-control" style="max-width: 260px; padding: 8px 14px; font-size: 0.9rem;" onchange="renderLabButtons()">
+                                <option value="">Todas as Escolas</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="almox-selector-content">
                         <!-- Mannequin layout decoration -->
@@ -352,10 +357,8 @@
                             <path d="M45 32h10c5 0 9 4 9 9v30h-4v25h-10V71H40v25H30V71h-4V41c0-5 4-9 9-9z"/>
                         </svg>
                         
-                        <div class="almox-buttons-group">
-                            <button class="almox-button" onclick="openLab(1)">ALMOXARIFADO LAB 1</button>
-                            <button class="almox-button" onclick="openLab(2)">ALMOXARIFADO LAB 2</button>
-                            <button class="almox-button" onclick="openLab(3)">ALMOXARIFADO LAB 3</button>
+                        <div class="almox-buttons-group" id="almox-buttons-group-container">
+                            <!-- Dynamically rendered by renderLabButtons() -->
                         </div>
                         
                         <!-- Mannequin layout decoration -->
@@ -666,137 +669,115 @@
                 </div>
             </section>
 
-            <!-- MINHAS DENÚNCIAS SECTION -->
-            <section id="minhas-denuncias" class="view-section">
+            <!-- OCORRÊNCIAS SECTION (TAB) -->
+            <section id="ocorrencias" class="view-section">
                 <div class="content-container">
-                    <h2 class="section-title">Minhas Denúncias Enviadas</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem;">Consulte e visualize as denúncias de ocorrência que você enviou:</p>
+                    <h2 class="section-title">Central de Ocorrências</h2>
                     
-                    <!-- Grid of reports -->
-                    <div class="boletins-grid" id="minhas-denuncias-grid-container">
-                        <!-- Dynamically populated by JS -->
+                    <!-- Sub-tabs for Ocorrências -->
+                    <div class="boletim-subtabs" style="display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <button type="button" class="btn-subtab active" id="btn-subtab-minhas" onclick="switchOcorrenciasTab('minhas')" style="background: none; border: none; color: var(--primary-beige); font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; cursor: pointer; padding-bottom: 5px; border-bottom: 2px solid var(--primary-beige); transition: var(--transition-smooth);">📁 Minhas Denúncias</button>
+                        <button type="button" class="btn-subtab" id="btn-subtab-gerais" onclick="switchOcorrenciasTab('gerais')" style="background: none; border: none; color: var(--text-muted); font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; cursor: pointer; padding-bottom: 5px; transition: var(--transition-smooth);">📁 Denúncias Gerais</button>
+                    </div>
+
+                    <!-- Minhas Denúncias Folder -->
+                    <div id="subtab-content-minhas" class="subtab-content">
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">Consulte e visualize as denúncias de ocorrência que você enviou:</p>
+                        <div class="boletins-grid" id="minhas-denuncias-grid-container">
+                            <!-- Dynamically populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Denúncias Gerais Folder -->
+                    <div id="subtab-content-gerais" class="subtab-content" style="display: none;">
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">Consulte todas as denúncias enviadas para a coordenação por todos os professores:</p>
+                        <div class="boletins-grid" id="denuncias-gerais-grid-container">
+                            <!-- Dynamically populated by JS -->
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- DENÚNCIAS GERAIS SECTION -->
-            <section id="denuncias-gerais" class="view-section">
+            <!-- REGISTRAR ESCOLA SECTION -->
+            <section id="registrar-escola" class="view-section">
                 <div class="content-container">
-                    <h2 class="section-title">Pasta de Denúncias Gerais</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem;">Consulte todas as denúncias enviadas para a coordenação por todos os professores:</p>
-                    
-                    <!-- Grid of reports -->
-                    <div class="boletins-grid" id="denuncias-gerais-grid-container">
-                        <!-- Dynamically populated by JS -->
+                    <h2 class="section-title">Registrar Escola</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem;">Cadastre as escolas que serão atendidas pelo planejamento de aulas do laboratório:</p>
+
+                    <div class="perfil-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px;">
+                        <!-- Left: List of registered schools -->
+                        <div class="perfil-card">
+                            <h3 class="editor-section-title" style="font-size: 1.2rem; margin-bottom: 15px;">Escolas Cadastradas</h3>
+                            <div id="escolas-lista-container" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                                <!-- Dynamically populated by JS -->
+                                <div style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma escola cadastrada ainda.</div>
+                            </div>
+                        </div>
+
+                        <!-- Right: School registration form -->
+                        <div class="perfil-card">
+                            <h3 class="editor-section-title" style="font-size: 1.2rem; margin-bottom: 5px;">Nova Escola</h3>
+                            <p class="editor-section-subtitle" style="margin-bottom: 20px;">Insira as informações da escola para aplicar nos planos de aula:</p>
+                            
+                            <form id="school-registration-form">
+                                <div class="form-group-reg">
+                                    <label for="school-name">Nome da Escola / Unidade</label>
+                                    <input type="text" id="school-name" class="form-control-reg" placeholder="Ex: SENAI Vestuário Sul" required>
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="school-code">Código/Sigla</label>
+                                    <input type="text" id="school-code" class="form-control-reg" placeholder="Ex: SENAI-V-SUL" required>
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="school-city">Cidade / Município</label>
+                                    <input type="text" id="school-city" class="form-control-reg" placeholder="Ex: Teresina" required>
+                                </div>
+                                <button type="submit" class="btn-save-avatar" style="margin-top: 15px;">Cadastrar Escola</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- 6. GUIA DE ORGANIZAÇÃO SECTION -->
+            <!-- 6. GUIA DE ORGANIZAÇÃO SECTION (SOCIAL FEED) -->
             <section id="guia-organizacao" class="view-section">
                 <div class="content-container">
-                    <h2 class="section-title">Guia de Organização do Laboratório</h2>
+                    <h2 class="section-title">Mural de Organização do Laboratório</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem;">Compartilhe dicas, fotos e posts sobre a organização do laboratório (Diretrizes 5S e Sustentabilidade):</p>
                     
-                    <div class="guia-grid">
-                        <div class="guia-card">
-                            <h3>1. Agulhas e Alfinetes</h3>
-                            <ul class="guia-list">
-                                <li>Nunca deixe agulhas soltas nas bancadas.</li>
-                                <li>Guarde agulhas sobressalentes na embalagem original ou em alfineteiros magnéticos.</li>
-                                <li>Descarte agulhas tortas ou cegas em coletores de materiais perfurocortantes.</li>
-                            </ul>
+                    <div class="feed-layout" style="display: grid; grid-template-columns: 1.2fr 2fr; gap: 30px; align-items: start;">
+                        <!-- Left: Write a post card -->
+                        <div class="perfil-card" style="padding: 25px; position: sticky; top: 20px;">
+                            <h3 class="editor-section-title" style="font-size: 1.25rem; margin-bottom: 5px;">Nova Publicação</h3>
+                            <p class="editor-section-subtitle" style="margin-bottom: 20px; font-size: 0.85rem;">Compartilhe uma dica ou foto de organização:</p>
+                            
+                            <form id="org-post-form">
+                                <div class="form-group-reg">
+                                    <label for="post-title">Título do Post</label>
+                                    <input type="text" id="post-title" class="form-control-reg" placeholder="Ex: Organização de Tesouras" required>
+                                </div>
+                                <div class="form-group-reg">
+                                    <label for="post-content">Dica / Descrição</label>
+                                    <textarea id="post-content" class="form-control-reg" style="height: 100px; resize: none;" placeholder="Escreva aqui as instruções de organização ou sustentabilidade..." required></textarea>
+                                </div>
+                                <div class="form-group-reg">
+                                    <label>Imagem da Organização (Opcional)</label>
+                                    <div class="upload-area" id="post-upload-area" style="padding: 15px; margin-bottom: 10px;">
+                                        <span class="upload-icon" style="font-size: 1.5rem; margin-bottom: 5px;">📷</span>
+                                        <p class="upload-title" style="font-size: 0.8rem; margin-bottom: 2px;">Escolher Foto</p>
+                                        <input type="file" id="post-file-input" accept="image/*" style="display: none;">
+                                        <button type="button" class="btn-upload-trigger" onclick="document.getElementById('post-file-input').click()" style="padding: 5px 15px; font-size: 0.75rem;">Carregar</button>
+                                        <div id="post-img-preview-name" style="margin-top: 8px; font-size: 0.75rem; color: var(--accent-green); word-break: break-all; display: none;"></div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-save-avatar" style="margin-top: 10px; padding: 12px;">Publicar Post</button>
+                            </form>
                         </div>
                         
-                        <div class="guia-card">
-                            <h3>2. Máquinas de Costura</h3>
-                            <ul class="guia-list">
-                                <li>Desligue a máquina no interruptor geral ao terminar o trabalho.</li>
-                                <li>Limpe a caixa da bobina de fiapos e resíduos de fios diariamente.</li>
-                                <li>Cubra a máquina com a capa protetora ao final da aula.</li>
-                            </ul>
+                        <!-- Right: Post feed -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;" id="feed-posts-container">
+                            <!-- Dynamically loaded by app.js -->
                         </div>
-
-                        <div class="guia-card">
-                            <h3>3. Moldes e Papéis</h3>
-                            <ul class="guia-list">
-                                <li>Guarde moldes de papel kraft pendurados nos cabides apropriados.</li>
-                                <li>Identifique cada peça do molde com o nome da modelagem, tamanho e número de cortes.</li>
-                                <li>Enrole sobras reutilizáveis de papel e armazene na prateleira inferior.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Diretrizes 5S e Sustentabilidade -->
-                    <div class="certo-errado-section">
-                        <h3 class="section-title" style="font-size:1.3rem; margin-bottom:20px;">DIRETRIZES VISUAIS (5S)</h3>
-                        <div class="certo-errado-grid">
-                            <div class="visual-column certo">
-                                <h4>✓ CORRETO - LABORATÓRIO ORGANIZADO</h4>
-                                <div class="visual-placeholder"></div>
-                            </div>
-                            <div class="visual-column errado">
-                                <h4>✗ INCORRETO - ORGANIZAÇÃO INCOMPLETA / BAGUNÇA</h4>
-                                <div class="visual-placeholder"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sustentabilidade e Reciclagem -->
-                    <div class="sustentabilidade-section">
-                        <h3 class="section-title" style="font-size:1.4rem; color: #2ecc71;">🌱 Sustentabilidade e Reciclagem no Laboratório</h3>
-                        <p class="sustentabilidade-subtitle">Cuidar do nosso ambiente de trabalho e reduzir o desperdício é um compromisso de todos. Siga as diretrizes ecológicas:</p>
-                        
-                        <div class="eco-grid">
-                            <div class="eco-card">
-                                <div class="eco-card-header">
-                                    <span class="eco-icon">♻️</span>
-                                    <h4>Como Reciclar Tecidos</h4>
-                                </div>
-                                <p>Separe as sobras e retalhos de tecido em caixas coletoras específicas:</p>
-                                <ul class="eco-list">
-                                    <li><strong>Fibras Naturais (Algodão, Linho):</strong> Encaminhe para a compostagem têxtil ou doação para artesanato.</li>
-                                    <li><strong>Fibras Sintéticas (Poliéster, Cetim):</strong> Separe para reciclagem química ou enchimento industrial.</li>
-                                    <li>Nunca descarte retalhos de tecido no lixo comum!</li>
-                                </ul>
-                            </div>
-
-                            <div class="eco-card">
-                                <div class="eco-card-header">
-                                    <span class="eco-icon">🗑️</span>
-                                    <h4>Coleta Seletiva de Papel</h4>
-                                </div>
-                                <p>Os papéis utilizados no laboratório devem ser descartados com consciência:</p>
-                                <ul class="eco-list">
-                                    <li>Dobre e organize as sobras limpas de papel kraft e papel manteiga para reutilização em pequenos moldes.</li>
-                                    <li>Papéis sem condições de uso devem ser picados e descartados na lixeira azul de papel reciclável.</li>
-                                </ul>
-                            </div>
-
-                            <div class="eco-card">
-                                <div class="eco-card-header">
-                                    <span class="eco-icon">✂️</span>
-                                    <h4>Otimização e Redução</h4>
-                                </div>
-                                <p>Planeje o layout dos moldes antes de cortar para evitar o desperdício de matéria-prima:</p>
-                                <ul class="eco-list">
-                                    <li>Realize o encaixe dos moldes de forma otimizada (técnica de encaixe zero-desperdício).</li>
-                                    <li>Use giz para marcar as linhas de costura precisamente, evitando erros e perdas de tecidos.</li>
-                                </ul>
-                            </div>
-
-                            <div class="eco-card">
-                                <div class="eco-card-header">
-                                    <span class="eco-icon">🔌</span>
-                                    <h4>Economia de Energia</h4>
-                                </div>
-                                <p>Reduza o consumo elétrico no laboratório de forma ativa:</p>
-                                <ul class="eco-list">
-                                    <li>Desligue a máquina de costura e o ferro de passar imediatamente ao terminar a atividade.</li>
-                                    <li>Apague as luzes das estações de trabalho vazias e aproveite ao máximo a iluminação natural das janelas.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -832,6 +813,8 @@
                                     <th>Data</th>
                                     <th>Curso / Turma</th>
                                     <th>Tema da Aula</th>
+                                    <th>Duração & Local</th>
+                                    <th>Escola</th>
                                     <th>Objetivos</th>
                                     <th>Recursos Necessários</th>
                                     <th>Ações</th>
@@ -847,49 +830,39 @@
 
             <!-- Footer Section -->
             <footer class="senaivest-footer">
-                <div class="footer-top">
+                <div class="footer-top" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 45px;">
                     <div class="footer-brand-col">
                         <h3>SENAIVEST</h3>
                         <p>O futuro da indústria têxtil começa aqui. Plataforma integrada para gestão de laboratórios de moda, modelagem e costura industrial do SENAI.</p>
-                        <div class="social-icons">
-                            <span class="social-btn">f</span>
-                            <span class="social-btn">i</span>
-                            <span class="social-btn">y</span>
-                        </div>
                     </div>
                     
                     <div class="footer-col">
                         <h4>Serviços</h4>
-                        <ul class="footer-links">
-                            <li><a onclick="switchTab('perfil')">Meu Perfil</a></li>
-                            <li><a href="#">Cartão presente</a></li>
-                            <li><a href="#">Mapa do site</a></li>
-                            <li><a onclick="switchTab('almoxarifado')">Guia de produtos</a></li>
+                        <ul class="footer-links" style="display: flex; flex-direction: column; gap: 8px;">
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('perfil')">Meu Perfil</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('inicio')">Início</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('aba-geral')">Visão Geral</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('almoxarifado')">Almoxarifado</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('boletim')">Boletim</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('ocorrencias')">Ocorrências</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('registrar-escola')">Registrar Escola</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('guia-organizacao')">Mural de Organização</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('plano-aula')">Plano de Aula</a></li>
                         </ul>
                     </div>
 
                     <div class="footer-col">
-                        <h4>Suporte</h4>
-                        <ul class="footer-links">
-                            <li><a href="#">Black Friday</a></li>
-                            <li><a href="#">Acompanhe seu pedido</a></li>
-                            <li><a href="#">Ajuda</a></li>
-                            <li><a href="#">Sobre a Flash Step</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="footer-col">
-                        <h4>Redes Sociais</h4>
-                        <ul class="footer-links">
-                            <li><a href="#">Instagram</a></li>
-                            <li><a href="#">Facebook</a></li>
-                            <li><a href="#">YouTube</a></li>
+                        <h4>Suporte com IA</h4>
+                        <ul class="footer-links" style="display: flex; flex-direction: column; gap: 8px;">
+                            <li><a href="#" onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); showToast('Chat da Estela aberto!', 'info');">Conversar com a Estela (IA)</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); document.getElementById('assistant-chat-input').value='Estela, como funciona o controle de ferramentas e tecidos?'; document.getElementById('assistant-chat-input').focus();">Como usar o Almoxarifado</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); document.getElementById('assistant-chat-input').value='Como registrar um boletim de ocorrência?'; document.getElementById('assistant-chat-input').focus();">Ajuda com Ocorrências</a></li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="footer-bottom">
-                    <p>&copy; 2026 SENAIVEST. Todos os direitos reservados. Flash Step Comércio de Calçados Esportivos Ltda – CNPJ: 12.345.678/0001-99. Avenida Miguel Rosa, 2.100 – Galpão 05 - Bairro Parque das Palmeiras (Fictício) – CEP 64000-130 Teresina - PI</p>
+                    <p>&copy; 2026 SENAIVEST. Todos os direitos reservados. Plataforma de Gestão e Organização Integrada dos Laboratórios de Vestuário - SENAI.</p>
                     <div class="footer-bottom-links">
                         <a href="#">Brasil</a>
                         <a href="#">Política de Privacidade</a>
@@ -985,6 +958,25 @@
                     <div class="form-group">
                         <label for="plano-tema-input">Tema da Aula</label>
                         <input type="text" id="plano-tema-input" class="form-control" placeholder="Ex: Modelagem e Corte de Saia Evasê" required>
+                    </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="plano-duracao-input">Duração (Horas)</label>
+                            <input type="number" id="plano-duracao-input" class="form-control" placeholder="Ex: 4" min="1" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="plano-local-input">Local (Almoxarifado)</label>
+                            <select id="plano-local-input" class="form-control" required>
+                                <!-- Populated dynamically by app.js -->
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="plano-escola-input">Escola Aplicada</label>
+                            <select id="plano-escola-input" class="form-control" required>
+                                <!-- Populated dynamically by app.js -->
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -1164,6 +1156,77 @@
             <div class="modal-footer">
                 <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-view-boletim')">Fechar Relatório</button>
             </div>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: NETWORK CATEGORY PRODUCT VIEWER -->
+    <div class="modal-overlay" id="modal-network-viewer">
+        <div class="modal-box" style="max-width: 800px; width: 90%;">
+            <div class="modal-header">
+                <h2 id="modal-network-viewer-title">Produtos da Rede: Categoria</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-network-viewer')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; justify-content: space-between; align-items: center;">
+                    <input type="text" id="network-viewer-search" class="form-control" placeholder="🔍 Pesquisar produtos da rede..." style="max-width: 400px; margin-bottom: 0;">
+                    <button type="button" class="btn-modal-submit" id="btn-network-viewer-add-prod" style="padding: 10px 20px; white-space: nowrap;">+ Novo Item</button>
+                </div>
+                <div class="plano-table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table class="plano-table" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantidade</th>
+                                <th>Almoxarifado</th>
+                                <th>Localização</th>
+                                <th>Status de Pertença</th>
+                            </tr>
+                        </thead>
+                        <tbody id="network-viewer-table-body">
+                            <!-- Dynamically loaded by app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-network-viewer')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: ADD NEW ALMOXARIFADO -->
+    <div class="modal-overlay" id="modal-add-almoxarifado">
+        <div class="modal-box" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Registrar Novo Almoxarifado</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-add-almoxarifado')">&times;</button>
+            </div>
+            <form id="form-add-almoxarifado">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="almox-name">Nome do Almoxarifado / Laboratório</label>
+                        <input type="text" id="almox-name" class="form-control" placeholder="Ex: Laboratório 4" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="almox-responsavel">Responsável pelo Espaço</label>
+                        <input type="text" id="almox-responsavel" class="form-control" placeholder="Ex: Prof. Carol" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="almox-sigla">Sigla / Identificação</label>
+                        <input type="text" id="almox-sigla" class="form-control" placeholder="Ex: LAB-4" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="almox-escola-vinculo">Escola Vinculada (Opcional)</label>
+                        <select id="almox-escola-vinculo" class="form-control">
+                            <option value="">Nenhuma escola específica</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-add-almoxarifado')">Cancelar</button>
+                    <button type="submit" class="btn-modal-submit">Registrar Almoxarifado</button>
+                </div>
+            </form>
         </div>
     </div>
 
