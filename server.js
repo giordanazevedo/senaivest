@@ -255,6 +255,20 @@ async function handleRequest(req, res) {
             return;
         }
 
+        // GET /api/users — return all registered user accounts (names/emails/roles/etc.)
+        if (safeUrl === '/api/users' && req.method === 'GET') {
+            let users = [];
+            if (usersCollection) {
+                users = await usersCollection.find({}, { projection: { password: 0 } }).toArray();
+            } else {
+                users = readJSONFile('users') || [];
+                // strip passwords
+                users = users.map(({ password, ...rest }) => rest);
+            }
+            respond(res, 200, users);
+            return;
+        }
+
         // GET /api/data — return all shared app data (schools, inventory, etc.)
         if (safeUrl === '/api/data' && req.method === 'GET') {
             respond(res, 200, { ...memoryStore });

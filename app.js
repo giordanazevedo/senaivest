@@ -1851,20 +1851,34 @@ function updateDashboardStats() {
     renderAnalyticsDashboard();
 }
 
-function renderAnalyticsDashboard() {
+async function renderAnalyticsDashboard() {
     const tableBody = document.getElementById('dashboard-teachers-stats-body');
     if (!tableBody) return;
 
-    // 1. Gather all unique teachers
-    // Start with a predefined list of default teachers + any teacher from plans or registeredUser
+    let serverUsers = [];
+    try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+            serverUsers = await res.json();
+        }
+    } catch (e) {
+        console.warn('Falha ao buscar usuários do servidor, usando fallback local:', e);
+    }
+
+    // 1. Gather all unique teachers from registered user database + plans + default teachers
     const teacherSet = new Set(['Prof(a). Carol', 'Prof. Carlos', 'Prof(a). Emanuela']);
     
+    // Add all users registered on the server/DB
+    serverUsers.forEach(u => {
+        if (u.name) teacherSet.add(u.name);
+    });
+
     // Add teachers who registered plans
     lessonPlans.forEach(p => {
         if (p.professor) teacherSet.add(p.professor);
     });
 
-    // Add current user if exists
+    // Add current local user if exists
     const currentUserStr = localStorage.getItem('registeredUser');
     if (currentUserStr) {
         try {
