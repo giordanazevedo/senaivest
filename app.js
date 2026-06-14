@@ -2400,12 +2400,12 @@ function initEstelaChatbot() {
 
 // --- BOLETINS DE OCORRÊNCIA REGISTRADOS & CODE AUTO-GENERATORS ---
 
-// Mock registered reports data
 let initialBoletins = [
     {
         id: 1,
         code: 'DOC-2026-001',
         date: '2026-06-10',
+        categoria: 'avaria',
         curso: 'Costura Industrial A',
         professor: 'Prof. Carlos',
         material: 'Réguas de 60cm',
