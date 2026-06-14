@@ -1556,7 +1556,44 @@ function renderLessonPlans() {
     if (!tableBody) return;
     tableBody.innerHTML = '';
 
+    // Get current logged-in user profile to find their school/institution name or code
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let userSchoolName = '';
+    let userSchoolCode = '';
+    
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            // In profile, school is saved under 'instituicao'
+            userSchoolName = (user.instituicao || '').trim().toLowerCase();
+            
+            // Try to find if user's school matches one of the registered schools
+            const schoolMatch = registeredSchools.find(s => 
+                s.name.trim().toLowerCase() === userSchoolName ||
+                s.code.trim().toLowerCase() === userSchoolName
+            );
+            if (schoolMatch) {
+                userSchoolCode = schoolMatch.code;
+                userSchoolName = schoolMatch.name.trim().toLowerCase();
+            }
+        } catch (e) {}
+    }
+
     lessonPlans.forEach(plano => {
+        // Find School Details for the plan
+        const schoolObj = registeredSchools.find(s => s.code === plano.escola);
+        const planSchoolName = schoolObj ? schoolObj.name.trim().toLowerCase() : (plano.escola || '').trim().toLowerCase();
+        const planSchoolCode = schoolObj ? schoolObj.code.trim().toLowerCase() : '';
+
+        // If the user has a school set, only show plans that match their school code or school name
+        if (userSchoolName) {
+            const matchesCode = userSchoolCode && planSchoolCode === userSchoolCode.toLowerCase();
+            const matchesName = planSchoolName.includes(userSchoolName) || userSchoolName.includes(planSchoolName);
+            if (!matchesCode && !matchesName) {
+                return; // Skip plans from other schools
+            }
+        }
+
         // Format Date
         let dateObj = new Date(plano.date);
         let formattedDate = plano.date;
