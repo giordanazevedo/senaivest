@@ -2,6 +2,31 @@
 let currentTab = 'inicio';
 let currentLab = null;
 
+// ── Auth Utilities (global scope for onclick handlers) ────────────────────
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.classList.toggle('active', isHidden);
+    // Update icon: open eye when showing, crossed eye when hidden
+    const svgOpen = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    const svgClosed = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    btn.querySelector('svg').innerHTML = isHidden ? svgClosed : svgOpen;
+}
+
+function clearLoginErrors() {
+    ['login-email-error', 'login-senha-error', 'login-general-error'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.display = 'none'; el.textContent = ''; }
+    });
+    const emailInput = document.getElementById('login-email');
+    const senhaInput = document.getElementById('login-senha');
+    if (emailInput) emailInput.classList.remove('input-error');
+    if (senhaInput) senhaInput.classList.remove('input-error');
+}
+
+
 // Mock Data for Almoxarifados (Labs 1, 2, and 3)
 let inventory = [
     // --- LAB 1 ---
@@ -381,25 +406,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check registration state
     const regOverlay = document.getElementById('register-fullscreen-overlay');
     let registeredUser = localStorage.getItem('registeredUser');
-    let isLoggedIn = localStorage.getItem('isLoggedIn');
     const signupCard = document.getElementById('auth-cadastro-card');
     const loginCard = document.getElementById('auth-login-card');
 
     if (!registeredUser) {
-        // No user at all — show signup form for new users
+        // NEW DEVICE or first time: show LOGIN form by default
+        // User may already have an account on another device
         regOverlay.style.display = 'flex';
-        signupCard.style.display = 'flex';
-        loginCard.style.display = 'none';
+        loginCard.style.display = 'flex';
+        signupCard.style.display = 'none';
     } else {
-        // User already registered — AUTO-LOGIN instantly, no screen needed!
-        // If they manually logged out, still auto-login them back (session persistence)
+        // SAME DEVICE with saved session — auto-login instantly
         const user = JSON.parse(registeredUser);
         localStorage.setItem('isLoggedIn', 'true');
-        isLoggedIn = 'true';
         regOverlay.style.display = 'none';
         updateUserUI(user);
         
-        // Sync to backend in background (non-blocking)
+        // Sync account to backend in background (non-blocking)
         fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -506,93 +529,138 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle Login Form
+    // Handle Login Form — with specific error messages per field
     const firstLoginForm = document.getElementById('first-login-form');
     if (firstLoginForm) {
-        firstLoginForm.addEventListener('submit', (e) => {
+        firstLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const senha = document.getElementById('login-senha').value;
-
-            const credentials = { email, password: senha };
             
-            fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(credentials)
-            })
-            .then(async response => {
+            const emailInput = document.getElementById('login-email');
+            const senhaInput = document.getElementById('login-senha');
+            const emailError = document.getElementById('login-email-error');
+            const senhaError = document.getElementById('login-senha-error');
+            const generalError = document.getElementById('login-general-error');
+            const btnText = document.getElementById('btn-entrar-text');
+            const btnLoading = document.getElementById('btn-entrar-loading');
+            const submitBtn = document.getElementById('btn-entrar-sistema');
+            
+            const email = emailInput.value.trim();
+            const senha = senhaInput.value;
+            
+            // Reset errors
+            [emailError, senhaError, generalError].forEach(el => { if(el) { el.style.display = 'none'; el.textContent = ''; } });
+            emailInput.classList.remove('input-error');
+            senhaInput.classList.remove('input-error');
+            
+            // Basic validation
+            if (!email) {
+                emailError.textContent = '⚠️ Digite seu e-mail.';
+                emailError.style.display = 'block';
+                emailInput.classList.add('input-error');
+                emailInput.focus();
+                return;
+            }
+            if (!senha) {
+                senhaError.textContent = '⚠️ Digite sua senha.';
+                senhaError.style.display = 'block';
+                senhaInput.classList.add('input-error');
+                senhaInput.focus();
+                return;
+            }
+            
+            // Show loading state
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoading) btnLoading.style.display = 'inline';
+            if (submitBtn) submitBtn.disabled = true;
+            
+            const resetBtn = () => {
+                if (btnText) btnText.style.display = 'inline';
+                if (btnLoading) btnLoading.style.display = 'none';
+                if (submitBtn) submitBtn.disabled = false;
+            };
+            
+            const doLogin = (user) => {
+                localStorage.setItem('registeredUser', JSON.stringify(user));
+                localStorage.setItem('isLoggedIn', 'true');
+                updateUserUI(user);
+                
+                regOverlay.style.transition = 'opacity 0.5s ease-out';
+                regOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    regOverlay.style.display = 'none';
+                    regOverlay.style.opacity = '1';
+                }, 500);
+                showToast('Login realizado com sucesso!', 'success');
+                switchTab('inicio');
+            };
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: senha })
+                });
+                
                 const data = await response.json();
+                resetBtn();
+                
                 if (response.ok) {
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('registeredUser', JSON.stringify(data.user));
-                    updateUserUI(data.user);
+                    // Success!
+                    doLogin(data.user);
                     
-                    regOverlay.style.transition = 'opacity 0.5s ease-out';
-                    regOverlay.style.opacity = '0';
-                    setTimeout(() => {
-                        regOverlay.style.display = 'none';
-                        regOverlay.style.opacity = '1';
-                    }, 500);
-
-                    showToast('Login realizado com sucesso!', 'success');
-                    switchTab('inicio');
+                } else if (data.error === 'EMAIL_NOT_FOUND') {
+                    // Email not registered in the system
+                    emailInput.classList.add('input-error');
+                    emailError.innerHTML = '❌ E-mail não encontrado. <a href="#" onclick="document.getElementById(\'go-to-signup-btn\').click()" style="color:var(--primary-beige); text-decoration:underline;">Criar uma conta?</a>';
+                    emailError.style.display = 'block';
+                    emailInput.focus();
+                    
+                } else if (data.error === 'WRONG_PASSWORD') {
+                    // Email found but password incorrect
+                    senhaInput.classList.add('input-error');
+                    senhaError.textContent = '🔒 Senha incorreta. Verifique e tente novamente.';
+                    senhaError.style.display = 'block';
+                    senhaInput.value = '';
+                    senhaInput.focus();
+                    
                 } else {
-                    // Local fallback check if backend is online but user not registered there yet (e.g. db reset)
+                    // Other server error — try local fallback
                     const storedUserStr = localStorage.getItem('registeredUser');
                     if (storedUserStr) {
                         const storedUser = JSON.parse(storedUserStr);
                         if (storedUser.email.toLowerCase() === email.toLowerCase() && storedUser.password === senha) {
-                            localStorage.setItem('isLoggedIn', 'true');
-                            updateUserUI(storedUser);
-                            
-                            // Auto-register on the backend so it's in sync
-                            fetch('/api/register', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(storedUser)
-                            }).catch(() => {});
-
-                            regOverlay.style.transition = 'opacity 0.5s ease-out';
-                            regOverlay.style.opacity = '0';
-                            setTimeout(() => {
-                                regOverlay.style.display = 'none';
-                                regOverlay.style.opacity = '1';
-                            }, 500);
-
-                            showToast('Login realizado com sucesso (Modo Sincronizado)!', 'success');
-                            switchTab('inicio');
+                            doLogin(storedUser);
                             return;
                         }
                     }
-                    showToast(data.error || 'E-mail ou senha inválidos!', 'error');
+                    if (generalError) {
+                        generalError.textContent = data.message || 'Erro ao fazer login. Tente novamente.';
+                        generalError.style.display = 'block';
+                    }
                 }
-            })
-            .catch(err => {
-                console.warn('Backend offline, usando login local:', err);
+                
+            } catch (networkErr) {
+                // Server offline — try local storage as fallback
+                resetBtn();
+                console.warn('Servidor offline, tentando login local:', networkErr);
                 const storedUserStr = localStorage.getItem('registeredUser');
-                if (!storedUserStr) {
-                    showToast('Nenhum usuário cadastrado no sistema!', 'error');
-                    return;
-                }
-                const storedUser = JSON.parse(storedUserStr);
-                if (storedUser.email.toLowerCase() === email.toLowerCase() && storedUser.password === senha) {
-                    localStorage.setItem('isLoggedIn', 'true');
-                    updateUserUI(storedUser);
-                    
-                    regOverlay.style.transition = 'opacity 0.5s ease-out';
-                    regOverlay.style.opacity = '0';
-                    setTimeout(() => {
-                        regOverlay.style.display = 'none';
-                        regOverlay.style.opacity = '1';
-                    }, 500);
-
-                    showToast('Login realizado com sucesso (Modo Local)!', 'success');
-                    switchTab('inicio');
+                if (storedUserStr) {
+                    const storedUser = JSON.parse(storedUserStr);
+                    if (storedUser.email.toLowerCase() === email.toLowerCase() && storedUser.password === senha) {
+                        doLogin(storedUser);
+                        showToast('Login em modo offline.', 'info');
+                        return;
+                    }
+                    senhaInput.classList.add('input-error');
+                    senhaError.textContent = '🔒 Senha incorreta.';
+                    senhaError.style.display = 'block';
                 } else {
-                    showToast('E-mail ou senha inválidos!', 'error');
+                    if (generalError) {
+                        generalError.textContent = '⚠️ Servidor indisponível e nenhuma conta local encontrada.';
+                        generalError.style.display = 'block';
+                    }
                 }
-            });
+            }
         });
     }
 
@@ -601,16 +669,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            if (!confirm('Deseja realmente sair do sistema? Você precisará se cadastrar novamente para entrar.')) return;
+            if (!confirm('Deseja sair? Na próxima vez, faça login com seu e-mail e senha.')) return;
             
-            // Clear session data completely
+            // Clear local session (account still exists on server)
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('registeredUser');
             
-            // Show signup card for fresh start
-            signupCard.style.display = 'flex';
-            loginCard.style.display = 'none';
+            // Show LOGIN card (user may want to sign in again or use another account)
+            loginCard.style.display = 'flex';
+            signupCard.style.display = 'none';
             regOverlay.style.display = 'flex';
+            
+            // Reset login form errors
+            ['login-email-error','login-senha-error','login-general-error'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.style.display = 'none'; el.textContent = ''; }
+            });
             
             showToast('Você saiu do sistema.', 'info');
         });

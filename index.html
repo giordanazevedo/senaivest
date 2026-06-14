@@ -10,7 +10,7 @@
     <!-- Authentication Screen Overlay (Cadastro / Login) -->
     <div id="register-fullscreen-overlay" class="register-fullscreen-overlay" style="display: none;">
         <!-- CADASTRO CARD -->
-        <div id="auth-cadastro-card" class="register-card" style="display: flex; flex-direction: column;">
+        <div id="auth-cadastro-card" class="register-card" style="display: none; flex-direction: column;">
             <div class="register-card-header">
                 <h2>SENAIVEST</h2>
                 <p>Crie sua conta para acessar o painel do laboratório</p>
@@ -34,7 +34,12 @@
                 </div>
                 <div class="form-group-reg">
                     <label for="first-reg-senha">Senha de Acesso</label>
-                    <input type="password" id="first-reg-senha" class="form-control-reg" placeholder="Mínimo 8 caracteres" required>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="first-reg-senha" class="form-control-reg" placeholder="Mínimo 8 caracteres" required style="padding-right: 48px;">
+                        <button type="button" class="btn-toggle-password" onclick="togglePassword('first-reg-senha', this)" title="Mostrar/ocultar senha">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
                     <div class="cadastro-subtext-reg">
                         * Mínimo de 8 caracteres<br>
                         * Letras maiúsculas, minúsculas e número
@@ -48,27 +53,42 @@
         </div>
 
         <!-- LOGIN CARD -->
-        <div id="auth-login-card" class="register-card" style="display: none; flex-direction: column;">
+        <div id="auth-login-card" class="register-card" style="display: flex; flex-direction: column;">
             <div class="register-card-header">
                 <h2>SENAIVEST</h2>
                 <p>Faça login para acessar o painel do laboratório</p>
             </div>
-            <form id="first-login-form">
+            <form id="first-login-form" novalidate>
                 <div class="form-group-reg">
                     <label for="login-email">E-mail</label>
-                    <input type="email" id="login-email" class="form-control-reg" placeholder="Ex: carol@senai.br" required>
+                    <input type="email" id="login-email" class="form-control-reg" placeholder="Ex: carol@senai.br" required autocomplete="email">
+                    <!-- Error message for email -->
+                    <div id="login-email-error" class="auth-field-error" style="display:none;"></div>
                 </div>
                 <div class="form-group-reg">
                     <label for="login-senha">Senha</label>
-                    <input type="password" id="login-senha" class="form-control-reg" placeholder="Digite sua senha" required>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="login-senha" class="form-control-reg" placeholder="Digite sua senha" required autocomplete="current-password" style="padding-right: 48px;">
+                        <button type="button" class="btn-toggle-password" onclick="togglePassword('login-senha', this)" title="Mostrar/ocultar senha">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                    <!-- Error message for password -->
+                    <div id="login-senha-error" class="auth-field-error" style="display:none;"></div>
                 </div>
-                <button type="submit" class="btn-register-submit-large">ENTRAR NO SISTEMA</button>
+                <!-- General error banner -->
+                <div id="login-general-error" class="auth-general-error" style="display:none;"></div>
+                <button type="submit" id="btn-entrar-sistema" class="btn-register-submit-large">
+                    <span id="btn-entrar-text">ENTRAR NO SISTEMA</span>
+                    <span id="btn-entrar-loading" style="display:none;">⏳ Verificando...</span>
+                </button>
                 <div class="auth-toggle-text" style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
                     Não tem conta? <a href="#" id="go-to-signup-btn" style="color: var(--primary-beige); text-decoration: none; font-weight: 600;">Cadastre-se</a>
                 </div>
             </form>
         </div>
     </div>
+
 
     <div class="app-container">
         <!-- Sidebar Overlay -->
