@@ -1583,6 +1583,7 @@ function renderLessonPlans() {
         
         row.innerHTML = `
             <td>${formattedDate}</td>
+            <td><strong>${plano.professor || 'Não informado'}</strong></td>
             <td>
                 <span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige); margin-bottom:4px; display:inline-block;">${planCode}</span><br>
                 <strong>${plano.course}</strong>
@@ -3113,7 +3114,8 @@ function checkLessonPlanExpirations() {
     const now = Date.now();
     
     lessonPlans.forEach(plan => {
-        const durationMs = (plan.duracao || 2) * 10 * 1000;
+        // Convert real plan duration (hours) to actual milliseconds (1 hour = 3600000 ms)
+        const durationMs = (plan.duracao || 2) * 60 * 60 * 1000;
         const planStart = plan.createdAt || Date.now();
         const planEnd = planStart + durationMs;
         
